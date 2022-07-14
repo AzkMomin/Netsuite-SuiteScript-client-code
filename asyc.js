@@ -31,87 +31,87 @@ let {name, age, language} = obj;
 
 ////////Promises
 
-// const func1 = ()=>{
-//     return new Promise((resolve , reject)=>{
-//         console.log("Promis pending")
-//         setTimeout(()=>{
-//             const isTrue = true;
-//             console.log("Promis executed")
-//             if(isTrue){
-//                 console.log("Promis is resolve");
-//                 resolve();
-//             }
-//             else{
-//                 console.log("Promis is not been resolved");
-//                 reject("Promis got rejected")
-//             }
-//         },3000)
-//     })
-// }
+const func1 = ()=>{
+    return new Promise((resolve , reject)=>{
+        console.log("Promis pending")
+        setTimeout(()=>{
+            const isTrue = true;
+            console.log("Promis executed")
+            if(isTrue){
+                console.log("Promis is resolve");
+                resolve();
+            }
+            else{
+                console.log("Promis is not been resolved");
+                reject("Promis got rejected")
+            }
+        },3000)
+    })
+}
 
-// func1().then(()=>{
-//     console.log("Thanks for resolving")
-// }).catch(()=>{
-//     console.log("Please try again to resolve")
-// })
+func1().then(()=>{
+    console.log("Thanks for resolving")
+}).catch(()=>{
+    console.log("Please try again to resolve")
+})
 
 // -------------------------------------------------------------------------------------------------------------------
 
-// const studentList = [
-//     {name : "Arham" , subject : "MDS"},
-//     {name : "Ali" , subject : "ML"},
+const studentList = [
+    {name : "Arham" , subject : "MDS"},
+    {name : "Ali" , subject : "ML"},
     
-// ]
+]
 
-// let stud = {name : "Nooh" , subject : "Civil"}
+let stud = {name : "Nooh" , subject : "Civil"}
 
-// const enrollStd = (stud)=>{
-//     return new Promise((resolve, reject)=>{
-//             let isTrue = false;
-//             console.log("Enrolling...");
-//             studentList.push(stud);
-//             console.log("Enroled sucessfully");
-//             isTrue = true;
+const enrollStd = (stud)=>{
+    return new Promise((resolve, reject)=>{
+            let isTrue = false;
+            console.log("Enrolling...");
+            studentList.push(stud);
+            console.log("Enroled sucessfully");
+            isTrue = true;
 
         
-//         setTimeout(()=>{
-//             if(isTrue){
-//                 resolve();
-//             }else{
-//                 reject();
-//             }
-//         },2000)
-//     })
-// }
+        setTimeout(()=>{
+            if(isTrue){
+                resolve();
+            }else{
+                reject();
+            }
+        },2000)
+    })
+}
 
-// enrollStd(stud).then(()=>{
-//     setTimeout(()=>{
-//         studentList.forEach(element=>{
-//             console.log(`name : ${element.name} , subject : ${element.subject}`)
-//         })
-//     })
-// }).catch(()=>{
-//     console.log("Some error occured")
-// })
+enrollStd(stud).then(()=>{
+    setTimeout(()=>{
+        studentList.forEach(element=>{
+            console.log(`name : ${element.name} , subject : ${element.subject}`)
+        })
+    })
+}).catch(()=>{
+    console.log("Some error occured")
+})
 
-// --------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
-// let api = "https://api.github.com/users?since=XXX"
-// async function harry(){
-//     console.log("inside harry function");
-//     const response = await fetch(api)
-//     console.log("Before response");
-//     const users = await response.json();
-//     console.log("user resolve")
-//     return users
-// }
+let api = "https://api.github.com/users?since=XXX"
+async function harry(){
+    console.log("inside harry function");
+    const response = await fetch(api)
+    console.log("Before response");
+    const users = await response.json();
+    console.log("user resolve")
+    return users
+}
 
-// console.log("before calling harry");
-// let a = harry();
-// console.log("After calling harry");
-// console.log(a);
-// a.then(data => console.log(data))
-// console.log("Last line of this file")
+console.log("before calling harry");
+let a = harry();
+console.log("After calling harry");
+console.log(a);
+a.then(data => console.log(data))
+console.log("Last line of this file")
 
 
 
@@ -120,152 +120,152 @@ let {name, age, language} = obj;
 
 
 
-// class vehicle {
-//     constructor(name , speed){
-//         this.name = name;
-//         this.speed = speed;
-//     }
+class vehicle {
+    constructor(name , speed){
+        this.name = name;
+        this.speed = speed;
+    }
 
-//     introduce(){
-//         console.log(`name is ${this.name} and speed is ${this.speed}`)
-//     }
-// }
-// class suzuki extends vehicle{
-//     constructor(name, speed, rpm){
-//         super(name, speed)
-//         this.rpm = rpm;
-//     }
-//     introduce(){
-//         console.log(`${this.name} and ${this.speed} and rpm is ${this.rpm}`)
-//     }
+    introduce(){
+        console.log(`name is ${this.name} and speed is ${this.speed}`)
+    }
+}
+class suzuki extends vehicle{
+    constructor(name, speed, rpm){
+        super(name, speed)
+        this.rpm = rpm;
+    }
+    introduce(){
+        console.log(`${this.name} and ${this.speed} and rpm is ${this.rpm}`)
+    }
     
-// }
+}
 
-// let olto = new vehicle("Range rover" , "200");
+let olto = new vehicle("Range rover" , "200");
 
-// olto.introduce()
-// let car2 = new suzuki("Range rover" , "200");
-// car2.introduce()
+olto.introduce()
+let car2 = new suzuki("Range rover" , "200");
+car2.introduce()
 
-// let car3 = new suzuki("Hrrier" , "250" , 256)
-// car3.introduce();
+let car3 = new suzuki("Hrrier" , "250" , 256)
+car3.introduce();
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 
-// const promis1 = Promise.resolve(2);
-// const promis2 = 34;
-// const promis3 = new Promise((resolve,reject)=>{
-//     setTimeout(resolve,100,"foo")
-// })
+const promis1 = Promise.resolve(2);
+const promis2 = 34;
+const promis3 = new Promise((resolve,reject)=>{
+    setTimeout(resolve,100,"foo")
+})
 
-// Promise.all([promis1,promis2,promis3]).then((value)=>{
-//     console.log(value)
-// })
+Promise.all([promis1,promis2,promis3]).then((value)=>{
+    console.log(value)
+})
 
-// const studentList = [
-//     {name : "Arham" , subject : "MDS"},
-//     {name : "Ali" , subject : "ML"},
+const studentList = [
+    {name : "Arham" , subject : "MDS"},
+    {name : "Ali" , subject : "ML"},
     
-// ]
+]
 
-// let stud = {name : "Nooh" , subject : "Civil"}
+let stud = {name : "Nooh" , subject : "Civil"}
 
-// const enrollStd = (stud)=>{
-//     return new Promise((resolve, reject)=>{
-//         const isTrue = ()=>{
-//             try{
-//                 console.log("Pushing....")
-//                 studentList.push(stud)
-//                 console.log("Enroll successfully")
-//                 return true
-//             }catch(err){
-//                 return false
-//             }
-//         }
-//         const whileTrue = isTrue();
+const enrollStd = (stud)=>{
+    return new Promise((resolve, reject)=>{
+        const isTrue = ()=>{
+            try{
+                console.log("Pushing....")
+                studentList.push(stud)
+                console.log("Enroll successfully")
+                return true
+            }catch(err){
+                return false
+            }
+        }
+        const whileTrue = isTrue();
 
-//         setTimeout(()=>{
-//             if(whileTrue == true){
-//                 resolve()
-//             }
-//             else{
-//                 console.log("rejected")
-//                 reject()
-//             }
-//         },2000)
-//     })
-// }
-// enrollStd(stud).then(()=>{
-//     studentList.forEach(element => {
-//         console.log(`name is :${element.name} , subject is : ${element.subject}`)
-//     });
-// }).catch(()=>{
-//     console.log("Something went wrong please check and try again")
-// })  
+        setTimeout(()=>{
+            if(whileTrue == true){
+                resolve()
+            }
+            else{
+                console.log("rejected")
+                reject()
+            }
+        },2000)
+    })
+}
+enrollStd(stud).then(()=>{
+    studentList.forEach(element => {
+        console.log(`name is :${element.name} , subject is : ${element.subject}`)
+    });
+}).catch(()=>{
+    console.log("Something went wrong please check and try again")
+})  
 
 
-//====================  Sequential execution  ================
-// function resolveHello(){
-//     return new Promise(resolve =>{
-//         setTimeout(()=>{
-//             resolve("hello")
-//         },2000)
-//     })
-// }
-// function resolveWorld(){
-//     return new Promise(resolve =>{
-//         setTimeout(()=>{
-//             resolve("Hello world")
-//         },3000)
-//     }) 
-// }
+====================  Sequential execution  ================
+function resolveHello(){
+    return new Promise(resolve =>{
+        setTimeout(()=>{
+            resolve("hello")
+        },2000)
+    })
+}
+function resolveWorld(){
+    return new Promise(resolve =>{
+        setTimeout(()=>{
+            resolve("Hello world")
+        },3000)
+    }) 
+}
 
-// async function sequentialStart(){
-//     const hello = await resolveHello()
-//     console.log(hello)
+async function sequentialStart(){
+    const hello = await resolveHello()
+    console.log(hello)
 
-//     const world = await resolveWorld();
-//     console.log(world);
-// }
-// sequentialStart()
+    const world = await resolveWorld();
+    console.log(world);
+}
+sequentialStart()
 
-///===================== Concurrent execution ============================
-// function resolveHello(){
-//     return new Promise(resolve =>{
-//         setTimeout(()=>{
-//             resolve("hello")
-//         },2000)
-//     })
-//     }
-// function resolveWorld(){
-//     return new Promise(resolve =>{
-//         setTimeout(()=>{
-//             resolve("Hello world")
-//         },1000)
-//     }) 
-// }
+/===================== Concurrent execution ============================
+function resolveHello(){
+    return new Promise(resolve =>{
+        setTimeout(()=>{
+            resolve("hello")
+        },2000)
+    })
+    }
+function resolveWorld(){
+    return new Promise(resolve =>{
+        setTimeout(()=>{
+            resolve("Hello world")
+        },1000)
+    }) 
+}
 
-// async function sequentialStart(){
-//     const hello = resolveHello();
-//     const world = resolveWorld();
+async function sequentialStart(){
+    const hello = resolveHello();
+    const world = resolveWorld();
 
-//     console.log(await hello) //It take 2 second to execute and print
-//     console.log(await world) // It is already execute parallely with the above function 
-//                              // It wont take time to print as soon as above will print tit also get printed
+    console.log(await hello) //It take 2 second to execute and print
+    console.log(await world) // It is already execute parallely with the above function 
+                             // It wont take time to print as soon as above will print tit also get printed
 
-// }
-// sequentialStart()
+}
+sequentialStart()
 
 //==========================  Parallel Execution =============================
-// async function parallel(){
-//     Promise.all([
-//         (async ()=>console.log(await resolveHello()))(),
-//         (async ()=>console.log(await resolveWorld()))(),
-//     ])
+async function parallel(){
+    Promise.all([
+        (async ()=>console.log(await resolveHello()))(),
+        (async ()=>console.log(await resolveWorld()))(),
+    ])
 
-// }
-// parallel()
+}
+parallel()
 
 
 
