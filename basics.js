@@ -16,18 +16,18 @@ let student = [
         },
 ]
 
-// for(let i in student){
-//         console.log(student[i])
-// }
+for(let i in student){
+        console.log(student[i])
+}
 
 student[1]["stdRoll No"] = 50
 
-// console.log(student[1]["stdRoll No"])
-// console.log(student[2].stdSubject[2])
-// student[2].stdSubject[2] = "Vibration"
-// console.log(student[2].stdSubject[2])
+console.log(student[1]["stdRoll No"])
+console.log(student[2].stdSubject[2])
+student[2].stdSubject[2] = "Vibration"
+console.log(student[2].stdSubject[2])
 
-// nested objects
+///////// nested objects
 
 const myObj = {
         21 : {
@@ -59,7 +59,7 @@ const myObj = {
         },
 }
 
-// console.log(myObj[21]["domain"]["coding languages"][0])
+console.log(myObj[21]["domain"]["coding languages"][0])
 
 
 const getDet = (value)=>{
