@@ -1,5 +1,5 @@
 /**
- * @NApiVersion 2.1
+ * @NApiVersion 1.0
  * @NScriptType MapReduceScript
  */
 
@@ -48,7 +48,7 @@ define([
             iterator.each(() => { return false; });
             var i = 0;
             iterator.each((line) => {
-                var lineValues = line.value.split(";");
+                var lineValues = line.value.split(",");
                 rec.push({
                     "customForm": lineValues[0],
                     "weekof": lineValues[1],
@@ -66,12 +66,12 @@ define([
                 i++;
                 return true;
             });
-            // log.debug('Record Data : ', rec);
+            log.debug('Record Data : ', rec);
 
-            createRecord(rec)
+            // createRecord(rec)
             //Move the file from CSV Files For Processing to CSV Files Processed
-            fileObj.folder = 3007
-            var fileid = fileObj.save();
+            // fileObj.folder = 3007
+            // var fileid = fileObj.save();
         }
 
         catch (e) {
@@ -81,7 +81,7 @@ define([
     }
 
     function createRecord(rec) {
-        log.debug('Record Data: ', rec);
+        // log.debug('Record Data: ', rec);
         var timeSheetRec = record.create({
             type: 'timesheet',
             isDynamic: true
@@ -275,23 +275,22 @@ define([
             const date2 = new Date(element.date);
             const diffTime = Math.abs(date2 - date1);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          
-            if (parseInt(diffDays) == 1) {
+            if (diffDays == 1) {
                 dateHours.hours1 = element.hours
             }
-            else if (parseInt(diffDays) == 2) {
+            else if (diffDays == 2) {
                 dateHours.hours2 = element.hours
             }
-            else if (parseInt(diffDays) == 3) {
+            else if (diffDays == 3) {
                 dateHours.hours3 = element.hours
             }
-            else if (parseInt(diffDays) == 4) {
+            else if (diffDays == 4) {
                 dateHours.hours4 = element.hours
             }
-            else if (parseInt(diffDays) == 5) {
+            else if (diffDays == 5) {
                 dateHours.hours5 = element.hours
             }
-            else if (parseInt(diffDays) == 6) {
+            else if (diffDays == 6) {
                 dateHours.hours6 = element.hours
             }
 
