@@ -1,0 +1,306 @@
+<?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<#if .locale == "zh_CN">
+		<link name="NotoSansCJKsc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKsc_Regular}" src-bold="${nsfont.NotoSansCJKsc_Bold}" bytes="2" />
+	<#elseif .locale == "zh_TW">
+		<link name="NotoSansCJKtc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKtc_Regular}" src-bold="${nsfont.NotoSansCJKtc_Bold}" bytes="2" />
+	<#elseif .locale == "ja_JP">
+		<link name="NotoSansCJKjp" type="font" subtype="opentype" src="${nsfont.NotoSansCJKjp_Regular}" src-bold="${nsfont.NotoSansCJKjp_Bold}" bytes="2" />
+	<#elseif .locale == "ko_KR">
+		<link name="NotoSansCJKkr" type="font" subtype="opentype" src="${nsfont.NotoSansCJKkr_Regular}" src-bold="${nsfont.NotoSansCJKkr_Bold}" bytes="2" />
+	<#elseif .locale == "th_TH">
+		<link name="NotoSansThai" type="font" subtype="opentype" src="${nsfont.NotoSansThai_Regular}" src-bold="${nsfont.NotoSansThai_Bold}" bytes="2" />
+	</#if>
+    <macrolist>
+        <macro id="nlheader">
+            <table><tr>
+	<td style="width: 794px;"><span style="font-size:28px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Addendum</span></td>
+	</tr></table>
+
+<table class="header" style="width: 100%;"><tr>
+	<td rowspan="3" style="width: 129px;padding-top: 20px"><#if companyInformation.logoUrl?length != 0><img src="${companyInformation.logoUrl}" style="float: left; margin: 5px;width: 100px; height: 50px;" /> </#if>${companyInformation.mainaddress_text}<br />&nbsp;</td>
+	<td rowspan="3" style="width: 311px;">${subsidiary.mainaddress_text}<br />&nbsp;</td>
+	<td align="right" style="width: 360px;padding-top: 15px"><span class="title">${record@title}</span></td>
+	</tr>
+	<tr>
+	<td align="right" style="width: 360px;padding-top: 10px"><span class="number">#${record.tranid}</span></td>
+	</tr>
+	<tr>
+	<td align="right" style="width: 360px;padding-top: 10px">${record.trandate}</td>
+	</tr></table>
+        </macro>
+        <macro id="nlfooter">
+            <table class="footer" style="width: 100%;"><tr>
+	<td><barcode codetype="code128" showtext="true" value="${record.tranid}"/></td>
+	<td align="right"><pagenumber/> of <totalpages/></td>
+	</tr></table>
+        </macro>
+    </macrolist>
+    <style type="text/css">* {
+		<#if .locale == "zh_CN">
+			font-family: NotoSans, NotoSansCJKsc, sans-serif;
+		<#elseif .locale == "zh_TW">
+			font-family: NotoSans, NotoSansCJKtc, sans-serif;
+		<#elseif .locale == "ja_JP">
+			font-family: NotoSans, NotoSansCJKjp, sans-serif;
+		<#elseif .locale == "ko_KR">
+			font-family: NotoSans, NotoSansCJKkr, sans-serif;
+		<#elseif .locale == "th_TH">
+			font-family: NotoSans, NotoSansThai, sans-serif;
+		<#else>
+			font-family: NotoSans, sans-serif;
+		</#if>
+		}
+		table {
+			font-size: 9pt;
+			table-layout: fixed;
+		}
+        th {
+            font-weight: bold;
+            font-size: 8pt;
+            vertical-align: middle;
+          text-align: center;
+            padding: 5px 6px 3px;
+            background-color: #e3e3e3;
+            color: #333333;
+          letter-spacing: 0.8px;
+        }
+        td {
+            padding: 4px 6px;
+        }
+		td p { align:left }
+        b {
+            font-weight: bold;
+            color: #333333;
+        }
+        table.header td {
+            padding: 0;
+            font-size: 10pt;
+        }
+        table.footer td {
+            padding: 0;
+            font-size: 8pt;
+        }
+        table.itemtable th {
+            padding-bottom: 10px;
+            padding-top: 10px;
+          	font-size: 8pt;
+        }
+        table.body td {
+            padding-top: 2px;
+        }
+        table.total {
+            page-break-inside: avoid;
+        }
+        tr.totalrow {
+            background-color: #e3e3e3;
+            line-height: 200%;
+        }
+        td.totalboxtop {
+            font-size: 12pt;
+            background-color: #e3e3e3;
+        }
+        td.addressheader {
+            font-size: 8pt;
+            padding-top: 6px;
+            padding-bottom: 2px;
+        }
+        td.address {
+            padding-top: 0;
+        }
+        td.totalboxmid {
+            font-size: 28pt;
+            padding-top: 20px;
+            background-color: #e3e3e3;
+        }
+        td.totalboxbot {
+            background-color: #e3e3e3;
+            font-weight: bold;
+        }
+        span.title {
+            font-size: 28pt;
+        }
+        span.number {
+            font-size: 16pt;
+        }
+        span.itemname {
+            font-weight: bold;
+            line-height: 150%;
+        }
+        hr {
+            width: 100%;
+            color: #d3d3d3;
+            background-color: #d3d3d3;
+            height: 1px;
+        }
+</style>
+</head>
+<body header="nlheader" header-height="15%" footer="nlfooter" footer-height="20pt" padding="0.5in 0.5in 0.5in 0.5in" size="Letter">
+  
+    <#assign blnIsInterior = false> 
+    <#assign blnIsExterior = false>
+    &nbsp;
+<table style="width: 100%;"><tr>
+	<td class="addressheader" colspan="6"><b>${record.billaddress@label} ${record.entity?keep_before(" ")}</b></td>
+	<td class="addressheader" colspan="6"><strong>Customer</strong></td>
+  <#if record.custbody_contracttype == "SR">
+	<td colspan="5"></td>
+    <#else>
+    <td class="totalboxtop" colspan="5"><b>${record.total@label?upper_case}</b></td>
+    </#if>
+	</tr>
+	<tr>
+	<td class="address" colspan="6" rowspan="2"><br />${record.billaddress}</td>
+	<td class="address" colspan="6" rowspan="2"><br />${record.shipto}<br />${record.shipaddress}&nbsp;</td>
+    
+	
+	<td align="right" class="totalboxmid" colspan="5">${record.total}</td>
+	</tr></table>
+<#if record.item?has_content>
+<#if record.custbody_contracttype == "SR">
+<table class="itemtable" width="100%"><!-- start items --><#list record.item as item><#if item_index==0>
+<thead>
+	<tr>
+	<th colspan="12" style="width: 50px;">${item.item@label}</th>
+	<th colspan="3" style="width: 350px;">Vendor Memo</th>
+	<th align="right" colspan="4" style="width: 55px;">${item.rate@label}</th>
+	<th align="right" colspan="4" style="width: 72px;">${item.amount@label}</th>
+	</tr>
+</thead>
+</#if>
+  <tr>
+    
+    <#if item.custcolnsps_bmoe_interior_exterior == "Interior">
+    	<#assign blnIsInterior = true>
+        <#assign blnIsExterior = false>
+    </#if>
+     
+    <#if item.custcolnsps_bmoe_interior_exterior == "Exterior">
+        <#assign blnIsInterior = false>
+        <#assign blnIsExterior = true>
+    </#if>
+			<td colspan="12" style="width: 50px;"><span class="itemname">${item.item}</span><br />${item.description}</td>
+    <td colspan="3" style="width: 350px;">${item.custcol_vendormemo}</td>
+	<td align="right" colspan="4" style="width: 54px;">${item.rate}</td>
+	<td align="right" colspan="4" style="width: 72px;">${item.amount}</td>
+	</tr>
+	</#list><!-- end items --></table>
+  <#else>
+    <table class="itemtable" style="width: 675px;"><!-- start items --><#list record.item as item><#if item_index==0>
+<thead>
+	<tr>
+	<th colspan="12" style="width: 50px;">${item.item@label}</th>
+	<th colspan="3" style="width: 350px;">Vendor Memo</th>
+	<th align="right" colspan="4" style="width: 55px;">${item.rate@label}</th>
+	<th align="right" colspan="4" style="width: 72px;">${item.amount@label}</th>
+	</tr>
+</thead>
+</#if>
+  <tr>
+    
+    <#if item.custcolnsps_bmoe_interior_exterior == "Interior">
+      <#assign blnIsInterior = true>
+      <#assign blnIsExterior = false>
+    </#if>
+     
+    <#if item.custcolnsps_bmoe_interior_exterior == "Exterior">
+        <#assign blnIsInterior = false>
+        <#assign blnIsExterior = true>
+    </#if>
+	<td colspan="12" style="width: 50px;"><span class="itemname">${item.item}</span><br />${item.description}</td>
+    <td colspan="3" style="width: 350px;">${item.custcol_vendormemo}</td>
+	<td align="right" colspan="4" style="width: 54px;">${item.rate}</td>
+	<td align="right" colspan="4" style="width: 72px;">${item.amount}</td>
+	</tr>
+	</#list><!-- end items --></table>
+  </#if>
+  
+  
+  </#if><#if record.expense?has_content></#if>
+
+<hr />
+<table class="total" style="width: 100%;"><tr class="totalrow">
+	<td background-color="#ffffff" colspan="4">&nbsp;</td>
+	<td align="right"><b>${record.total@label}</b></td>
+	<td align="right">${record.total}</td>
+	</tr></table> 
+  
+&nbsp; <#if record.custbody_kbs__interior_cb_requirements?has_content || record.custbody_kbs_exterior_cb_requirements?has_content>
+
+<table style="width: 100%;"><tr>
+	<td>EMPLOYMENT SCREENING REQUIREMENTS<br /><br />Prior to deployment onsite, Independent Contractor agrees to ensure that all personnel subject to this Addendum are screened according to the minimum requirements set forth herein and that the screening results meet Independent Contractor&#39;s employment standards. Any restrictions on employment, based on an individual&#39;s criminal record, must be in accordance with applicable state and local law. The minimum screening required is: </td>
+	</tr></table>
+
+<table style="width: 60%;">
+  <tr>
+    <#if record.custbody_kbs__interior_cb_requirements?has_content && blnIsInterior == true>
+	<td>
+	<table><tr>
+		<td><b>${record.custbody_kbs__interior_cb_requirements@label}</b></td>
+		</tr>
+		<#list record.custbody_kbs__interior_cb_requirements?split("\n") as x>
+		<tr>
+		<td>${x}</td>
+		</tr>
+		</#list></table>
+	</td>
+	</#if>
+    <#if record.custbody_kbs_exterior_cb_requirements?has_content && blnIsExterior == true>
+	<td>
+	<table><tr>
+		<td><b>${record.custbody_kbs_exterior_cb_requirements@label}</b></td>
+		</tr>
+		<#list record.custbody_kbs_exterior_cb_requirements?split("\n") as y>
+		<tr>
+		<td>${y}</td>
+		</tr>
+		</#list></table>
+	</td>
+	</#if></tr>
+	<tr>
+	<td>&nbsp;</td>
+	</tr>
+   </table>
+</#if>
+  
+<#assign bool = record.custbody_usps_language_in_po>
+  <#if  bool?string == "Yes">
+  <table border="0" cellpadding="1" cellspacing="1" style="width:100%;"><tr>
+	<td colspan="2">This Addendum is subject to the provisions of the Service Contract Act (“SCA”). Independent Contractor is required to pay any employees performing services under this Addendum not less than the wages and fringe beneﬁts set forth in Wage Determination for each facility’s county as will be provided by KBS to Independent Contractor via a separate email. The U.S. Department of Labor publication WH Publication 1313, explaining the SCA is available on the internet for any employees you may hire to assist in the performance of this Addendum. Also, both the hourly rate and the fringe benefit rate must be itemized separately on each employee’s check stub. Furthermore, Independent Contractor agrees to provide KBS or any governmental agency, upon request, with records related to the Services provided herein such as employee wage and hour and fringe beneﬁt information..<br />&nbsp;</td>
+    </tr>
+	<tr><td colspan="2"> Time is of the essence with respect to the snow removal related requirements outlined throughout the statement of work. The United States Postal Service (USPS) will have priority over any other comparable contracts held by the Independent Contractor. Movement of the mail is the most critical part of the operation at the USPS facilities. Thus, the service performance and contract responsiveness of the requirements associated are of the utmost importance. The Independent Contractor shall take a proactive approach to pending inclement weather by mobilizing relevant manpower, equipment, and materials before, during and after or as required of such weather. Pretreatment of all applicable sidewalks, stairways, and parking lots shall be completed prior to the start of a snow event. The Independent Contractor will effectively maintain the assigned facilities free from all hazardous conditions that may develop from ice or snow at entrances, steps, landings, sidewalks, and parking lots. All sidewalks, stairways, and parking lots shall be clear of all snow and ice in accordance with the applicable "triggers".<br />&nbsp;</td></tr>
+	</table>
+    </#if>
+	
+
+
+<table border="0" cellpadding="1" cellspacing="1" style="width:100%;">
+<tr><td colspan="2">Independent Contractor shall schedule a site visit (Pre-Season Inspection) with the respective sites and stake the area no later than October 31st. Marking stakes indicating obstacles to avoid during the snow removal operations, shall be installed. Photo documentation and the use of KBS Presence (GPS) app is required for all visits to the site. The Independent Contractor shall schedule a site visit (Post-Season Inspection) with the respective sites and assess any damage caused during snow removal services from the winter no later than May 31st. The marking stakes shall be removed at this time. Photo documentation and signed work order (if applicable), and use of KBS Presence (GPS) is required. Subcontract is responsible for all repairs to damages with photo confirmation by May 31st. All payments are subject to actual work performed; all services must be authenticated by using the KBS PRESENCE IVR app unless otherwise stated. Check-in and check-out with proof of service phots must be entered into the app during the service visit within the scheduled time of your service. Failure to check-in/out with photo confirmation for service using the KBS app will result in non-payment for service. Any service deemed unsatisfactory will not be paid. All service request by a site for service outside of the SOW must be approved by KBS in writing prior to being completed, failure to obtain written approval will result in non-payment. Any failure to service that results in KBS dispatching a back up vendor will result in a back charge of the accrued cost + 10%. Failure to complete inspections timely may result in KBS dispatching another supplier to complete the inspection, a $200.00 fee will be applied for inspections completed by KBS.<br />&nbsp;</td></tr>
+<tr>
+	<td colspan="2">This Addendum is incorporated into and made part of the Independent Contractor Master Service Agreement or Independent Contractor Agreement effective&nbsp;${record.custbody_kbs_cont_eff_date}&nbsp;between KBS and&nbsp;${record.custbody_kbs_subcont_company_name}&nbsp;as applicable, and all Goods and Services authorized hereunder will be delivered in accordance with the terms and conditions of said Agreement with the same force and effect as if the full text were presented in its entirety. Independent Contractor acknowledges that prior to the issuance of this Addendum, Independent Contractor received and agreed to the scope of work sent electronically by KBS.<br /><br />This Addendum has been approved and reviewed by the parties:<br />&nbsp;</td>
+	</tr>
+	<tr>
+	<td>KBS</td>
+	<td>INDEPENDENT CONTRACTOR</td>
+	</tr>
+	<tr>
+	<td>Signature: _________________________&nbsp;</td>
+	<td>Signature: _________________________</td>
+	</tr>
+	<tr>
+	<td>Print Name: ________________________</td>
+	<td>Print Name: ________________________</td>
+	</tr>
+	<tr>
+	<td>Title: _____________________________&nbsp;</td>
+	<td>Title: _____________________________&nbsp;</td>
+	</tr>
+	<tr>
+	<td>Date: _____________________________</td>
+	<td>Date: _____________________________</td>
+	</tr>
+	</table>
+</body>
+</pdf>

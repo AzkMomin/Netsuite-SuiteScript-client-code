@@ -1,0 +1,334 @@
+<?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<#if .locale == "zh_CN">
+		<link name="NotoSansCJKsc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKsc_Regular}" src-bold="${nsfont.NotoSansCJKsc_Bold}" bytes="2" />
+	<#elseif .locale == "zh_TW">
+		<link name="NotoSansCJKtc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKtc_Regular}" src-bold="${nsfont.NotoSansCJKtc_Bold}" bytes="2" />
+	<#elseif .locale == "ja_JP">
+		<link name="NotoSansCJKjp" type="font" subtype="opentype" src="${nsfont.NotoSansCJKjp_Regular}" src-bold="${nsfont.NotoSansCJKjp_Bold}" bytes="2" />
+	<#elseif .locale == "ko_KR">
+		<link name="NotoSansCJKkr" type="font" subtype="opentype" src="${nsfont.NotoSansCJKkr_Regular}" src-bold="${nsfont.NotoSansCJKkr_Bold}" bytes="2" />
+	<#elseif .locale == "th_TH">
+		<link name="NotoSansThai" type="font" subtype="opentype" src="${nsfont.NotoSansThai_Regular}" src-bold="${nsfont.NotoSansThai_Bold}" bytes="2" />
+	</#if>
+    <macrolist>
+        <macro id="nlheader">
+            <table class="header" style="width: 100%;"><tr style="height: 55px;">
+	<td width="50%"><#if record.class.custrecord_cl_logo_bu?has_content><#if subsidiary.name == 'Cordance Operations'><#if record.class.id == '5'><img src="${record.class.custrecord_cl_logo_bu@url}" style="width: 200px; height: 60px;" /> <#else> <img src="${record.class.custrecord_cl_logo_bu@url}" style="width: 300px; height: 60px;" /> </#if> <#else> <img src="${record.class.custrecord_cl_logo_bu@url}" style="width: 200px; height: 50px;" /> </#if> </#if></td>
+	<td align="right" style="font-size:20px;" width="50%"><b>Invoice</b></td>
+	</tr>
+	<tr>
+	<td colspan="2">For Billing Inquiries email us at :&nbsp;&nbsp;revenue@cordance.co<br />For Payment and Remittance Details email us at :&nbsp;&nbsp;AR@cordance.co
+	<h4>${subsidiary.name}</h4>
+	</td>
+	</tr></table>
+
+<table border="0 " style="border-collapse: collapse; width: 100%;"><tr><!--td style="width: 100%;"><span style="font-size:9px;">LockBox Address: Perment Software Group Operations LLC PO Box 347474 Pittsburgh, PA 15251-4474</span></td --></tr></table>
+        </macro>
+        <macro id="nlfooter">
+            <table class="footer" style="width: 100%;"><tr>
+	<td><barcode codetype="code128" showtext="true" value="${record.tranid}"/></td>
+	<td align="right"><pagenumber/>&nbsp; &nbsp;of <totalpages/></td>
+	</tr></table>
+        </macro>
+    </macrolist>
+    <style type="text/css">* {
+		<#if .locale == "zh_CN">
+			font-family: NotoSans, NotoSansCJKsc, sans-serif;
+		<#elseif .locale == "zh_TW">
+			font-family: NotoSans, NotoSansCJKtc, sans-serif;
+		<#elseif .locale == "ja_JP">
+			font-family: NotoSans, NotoSansCJKjp, sans-serif;
+		<#elseif .locale == "ko_KR">
+			font-family: NotoSans, NotoSansCJKkr, sans-serif;
+		<#elseif .locale == "th_TH">
+			font-family: NotoSans, NotoSansThai, sans-serif;
+		<#else>
+			font-family: NotoSans, sans-serif;
+		</#if>
+		}
+		table {
+			font-size: 10pt;
+			table-layout: fixed;
+		}
+        th {
+            font-weight: bold;
+            font-size: 10pt;
+            vertical-align: middle;
+            padding: 5px 6px 3px;
+            background-color: #e3e3e3;
+            color: #333333;
+        }
+        td {
+            padding: 4px 6px;
+        }
+		td p { align:left }
+        b {
+            font-weight: bold;
+            color: #333333;
+        }
+        table.header td {
+            padding: 0px;
+            font-size: 10pt;
+        }
+        table.footer td {
+            padding: 0px;
+            font-size: 8pt;
+        }
+        table.itemtable th {
+            padding-bottom: 10px;
+            padding-top: 10px;
+        }
+        table.body td {
+            padding-top: 2px;
+        }
+        table.total {
+            page-break-inside: avoid;
+        }
+        tr.totalrow {
+            background-color: #e3e3e3;
+            line-height: 200%;
+        }
+        td.totalboxtop {
+            font-size: 12pt;
+            background-color: #e3e3e3;
+        }
+        td.addressheader {
+            font-size: 8pt;
+            padding-top: 6px;
+            padding-bottom: 2px;
+        }
+        td.address {
+            padding-top: 0px;
+        }
+        td.totalboxmid {
+            font-size: 28pt;
+            padding-top: 20px;
+            background-color: #e3e3e3;
+        }
+        td.totalboxbot {
+            background-color: #e3e3e3;
+            font-weight: bold;
+        }
+        span.title {
+            font-size: 28pt;
+        }
+        span.number {
+            font-size: 16pt;
+        }
+        span.itemname {
+            font-weight: bold;
+            line-height: 150%;
+        }
+        hr {
+            width: 100%;
+            color: #d3d3d3;
+            background-color: #d3d3d3;
+            height: 1px;
+        }
+</style>
+</head>
+<body header="nlheader" header-height="11%" footer="nlfooter" footer-height="20pt" padding="0.5in 0.5in 0.2in 0.5in" size="Letter">
+    <table border="0" style="border-collapse: collapse; width: 100%; height: 18px;"><#if subsidiary.name == 'Permanent Software Group Canada Ltd.' && record.currency == 'Canadian Dollar'><tr style="height: 18px;">
+	<td style="width: 601px; height: 18px;">BMO: Bank number 001 Branch: 39972 Account: 1970-489</td>
+	</tr>
+	</#if><#if subsidiary.name == 'Permanent Software Group Canada Ltd.'&& record.currency == 'Canadian Dollar'>
+	<tr>
+	<td style="width: 100%;">The Canada Post mailing address is:<br />PERMANENT SOFTWARE GROUP CANADA LTD.<br />PO BOX 57751, STN A<br />Toronto, ON M5W 5M5<br />Item sent via courier should always include the Bank Name and Lockbox Number on the waybill.<br />T57751C &amp; T57751U C is for Canada dollar and U is USD</td>
+	</tr>
+	</#if><#if subsidiary.name == 'Permanent Software Group Canada Ltd.' && record.currency == 'US Dollar'>
+	<tr style="height: 18px;">
+	<td style="width: 100%; height: 18px;">Account:3303263714 Routing: 121140399/ Swift code: SVBKUS6S</td>
+	</tr>
+	<tr>
+	<td style="width: 100%;"><span>LockBox Address: Permanent Software Group Operations LLC PO Box 347474 Pittsburgh, PA 15251-4474</span></td>
+	</tr>
+	</#if><#if subsidiary.name == 'Cordance Operations' && record.currency == 'Canadian Dollar'>
+	<tr style="height: 18px;">
+	<td style="width: 601px; height: 18px;">BMO: Bank number 001 Branch: 39972 Account: 1970-489</td>
+	</tr>
+	</#if><#if subsidiary.name == 'Cordance Operations'  && record.currency == 'US Dollar'>
+	<tr style="height: 18px;">
+	<td style="width: 100%; height: 18px;">Please remit all wire payments to<br />Silicon Valley Bank,<br />3003 Tasmanian Drive, Santa Clara, CA 95054<br />Routing 121140399 Account 3303263714<br />Swift code: SVBKUS6S</td>
+	</tr>
+	<tr>
+	<td style="width: 100%;">Please remit all USPS mailed checks to the lockbox:<br />Cordance Operations LLC,<br />PO Box No 347474,<br />Pittsburgh, PA 152514474</td>
+	</tr>
+	</#if></table>
+<#if record.item?has_content>
+
+<table border="0px" style="border-collapse: collapse; width: 100%; height: 90px;"><tr style="height: 90px;">
+	<td rowspan="7" style="width: 33.3333%; height: 54px; vertical-align:top;"><b>${record.billaddress@label}</b><br />${record.billaddress}</td>
+	<td rowspan="7" style="width: 33.3333%; height: 54px; vertical-align:top;"><b>${record.shipaddress@label}</b><br />${record.shipaddress}<br />&nbsp;</td>
+	<td style="width: 33.3333%; height: 54px;">
+	<table border="1" style="border-collapse: collapse; width: 100%;"><tr>
+		<td style="width: 50%;">Account #</td>
+		<td style="width: 50%;">${record.entity}</td>
+		</tr>
+		<tr>
+		<td style="width: 50%;">Invoice #</td>
+		<td style="width: 50%;">${record.tranid}</td>
+		</tr>
+		<tr>
+		<td style="width: 50%;">Billed On</td>
+		<td style="width: 50%;">${record.trandate}</td>
+		</tr>
+		<tr>
+		<td style="width: 50%;">PO #</td>
+		<td style="width: 50%;">${record.otherrefnum}</td>
+		</tr>
+		<tr>
+		<td style="width: 50%;">Currency</td>
+		<td style="width: 50%;">${record.currency}</td>
+		</tr>
+		<tr>
+		<td style="width: 50%;">Terms</td>
+		<td style="width: 50%;">${record.terms}</td>
+		</tr>
+		<tr>
+		<td style="width: 50%;">Due On</td>
+		<td style="width: 50%;">${record.duedate}</td>
+		</tr>
+		<#if record.StartDate?string != '' && record.EndDate?string != ''>
+		<tr>
+		<td style="width: 50%;">Start date</td>
+		<td style="width: 50%;">${record.StartDate}</td>
+		</tr>
+		<tr>
+		<td style="width: 50%;">End date</td>
+		<td style="width: 50%;">${record.EndDate}</td>
+		</tr>
+		<tr><!-- changes w r t nst-335 -->
+		<td style="width: 50%;">Amount Due</td>
+		<td style="width: 50%;">${record.amountremaining}</td>
+		</tr>
+		</#if></table>
+	</td>
+	</tr></table>
+
+<table class="itemtable" style="width: 814.5px; margin-top: 20px;"><!-- start items --><#list record.item as item><#if item_index==0>
+<thead>
+	<tr>
+	<th align="center" colspan="3">${item.quantity@label}</th>
+	<th colspan="10">${item.item@label}</th>
+	<th align="right" colspan="4" style="padding: 10px 6px; white-space: nowrap;">Start date</th>
+	<th align="right" colspan="4" style="padding: 10px 6px; white-space: nowrap;">End Date</th>
+	<th align="right" colspan="4" style="padding: 10px 6px; white-space: nowrap;">Amount</th>
+	<#if subsidiary.name == 'Cordance Operations' && record.currency == 'US Dollar'><#else>
+	<th align="right" colspan="5" style="padding: 10px 6px; white-space: nowrap;">${item.taxamount@label}</th>
+	</#if><#if subsidiary.name == 'Cordance Operations' && record.currency == 'US Dollar'><#else>
+	<th align="right" colspan="4" style="padding: 10px 6px; white-space: nowrap;">${item.grossamt@label}</th>
+	</#if><!-- <th align="right" colspan="4" style="padding: 10px 6px; white-space: nowrap;">${item.grossamt@label}</th> --></tr>
+</thead>
+</#if><tr>
+	<td align="center" colspan="3" line-height="150%">${item.quantity}</td>
+	<td colspan="10"><span class="itemname">${item.item}</span><br />${item.description}${item.charge.serviceenddate}${item.custcol_cl_usage_memo}</td>
+	<td align="right" colspan="4">${item.custcol_atlas_contract_start_date}</td>
+	<td align="right" colspan="4">${item.custcol_atlas_contract_end_date}</td>
+	<td align="right" colspan="4">${item.amount}</td>
+	<#if subsidiary.name == 'Cordance Operations' && record.currency == 'US Dollar'><#else><#assign taxamount = item.taxamount?string /><#if taxamount == "">
+	<td align="right" colspan="5">$ 0.00</td>
+	<#else>
+	<td align="right" colspan="5">${item.taxamount}</td>
+	</#if></#if><#if subsidiary.name == 'Cordance Operations' && record.currency == 'US Dollar'><#else>
+	<td align="right" colspan="4">${item.grossamt}</td>
+	</#if><!-- <td align="right" colspan="4">${item.grossamt}</td> --></tr>
+	</#list><!-- end items --></table>
+&nbsp;
+
+<hr /></#if><!-- start Tax Summary --><#if record.item?has_content><#if subsidiary.name == 'Cordance Operations'><#if record.currency == 'Canadian Dollar'>
+<table style="width: 100%; margin-top: 10px;"><#list record.taxsummary as tax><#if tax_index==0><tr>
+	<th style="padding: 10px 6px;">${tax.taxtype@label}</th>
+	<th colspan="2" style="padding: 10px 6px;">${tax.taxcode@label}</th>
+	<th align="right" style="padding: 10px 6px; ">${tax.taxbasis@label}</th>
+	<th align="right" style="padding: 10px 6px; ">${tax.taxrate@label}</th>
+	<th align="right" style="padding: 10px 6px; ">${tax.taxamount@label}</th>
+	</tr>
+	</#if>
+	<tr>
+	<td>${tax.taxtype}</td>
+	<td colspan="2">${tax.taxcode}</td>
+	<td align="right">${tax.taxbasis}</td>
+	<td align="right">${(tax.taxrate * 10000)?string.number} %</td>
+	<td align="right">${tax.taxamount}</td>
+	</tr>
+	</#list><#if record.taxtotal?string != "$ 0.00">
+	<tr style="background-color: #e3e3e3; line-height: 200%;">
+	<td background-color="#ffffff" colspan="4">&nbsp;</td>
+	<td align="right" style="font-weight: bold; color: #333333;">Tax Total</td>
+	<td align="right">${record.taxtotal}</td>
+	</tr>
+	</#if></table>
+<#else></#if><#else>
+
+<table style="width: 100%; margin-top: 10px;"><#list record.taxsummary as tax><#if tax_index==0><tr>
+	<th style="padding: 10px 6px;">${tax.taxtype@label}</th>
+	<th colspan="2" style="padding: 10px 6px;">${tax.taxcode@label}</th>
+	<th align="right" style="padding: 10px 6px; ">${tax.taxbasis@label}</th>
+	<th align="right" style="padding: 10px 6px; ">${tax.taxrate@label}</th>
+	<th align="right" style="padding: 10px 6px; ">${tax.taxamount@label}</th>
+	</tr>
+	</#if>
+	<tr>
+	<td>${tax.taxtype}</td>
+	<td colspan="2">${tax.taxcode}</td>
+	<td align="right">${tax.taxbasis}</td>
+	<td align="right">${(tax.taxrate * 10000)?string.number} %</td>
+	<td align="right">${tax.taxamount}</td>
+	</tr>
+	</#list><#if record.taxtotal?string != "$ 0.00">
+	<tr style="background-color: #e3e3e3; line-height: 200%;">
+	<td background-color="#ffffff" colspan="4">&nbsp;</td>
+	<td align="right" style="font-weight: bold; color: #333333;">Tax Total</td>
+	<td align="right">${record.taxtotal}</td>
+	</tr>
+	</#if></table>
+</#if></#if><!-- end Tax Summary -->
+
+<table class="total" style="width: 100%; margin-top: 10px;"><tr>
+	<td colspan="6">&nbsp;</td>
+	<td align="right"><b>${record.subtotal@label}</b></td>
+	<td align="right">${record.subtotal}</td>
+	</tr>
+	<#if subsidiary.name == 'Permanent Software Group Canada Ltd.' && record.currency == 'Canadian Dollar'>
+	<tr>
+	<td colspan="6">GST: ${record.subsidiary.custrecord_cl_gstnumber}</td>
+	<td align="right"><b>${record.taxtotal@label}</b></td>
+	<td align="right">${record.taxtotal}</td>
+	</tr>
+	<#elseif subsidiary.name == 'Permanent Software Group Canada Ltd.' && record.currency == 'US Dollar' >
+	<tr>
+	<td colspan="6">EIN: ${record.subsidiary.custrecord_cl_ein_number}</td>
+	<td align="right"><b>${record.taxtotal@label}</b></td>
+	<td align="right">${record.taxtotal}</td>
+	</tr>
+	<#else>
+	<tr>
+	<td background-color="#ffffff" colspan="5">&nbsp;</td>
+	<td align="right" colspan="2"><b>Tax Amount</b></td>
+	<td align="right">${record.taxtotal}</td>
+	</tr>
+	</#if>
+	<tr class="totalrow">
+	<td background-color="#ffffff" colspan="6"><b>Legal Address</b></td>
+	<td align="right"><b>${record.total@label}</b></td>
+	<td align="right">${record.total}</td>
+	</tr>
+	<tr>
+	<td align="left" colspan="6">${subsidiary.mainaddress.addr1}, ${subsidiary.mainaddress.addr2}<br />${subsidiary.mainaddress.city} ${subsidiary.mainaddress.state} ${subsidiary.mainaddress.zip} ${subsidiary.mainaddress.country}</td>
+	<td align="right"><span style="font-size:11px;"><strong>${record.amountremaining@label}</strong></span></td>
+	<td align="right">${record.amountremaining}</td>
+	</tr>
+	<tr>
+	<td align="left" colspan="6">&nbsp;</td>
+	</tr></table>
+<!--Solupay Pay Link--><span style="color: #ffffff"><#assign paylink>https://go.solupay.com/myportal/invoice?ver=2&amp;invoiceId=${record.id}&amp;tranId=${record.tranid}&amp;companyId=${companyInformation.companyid}&amp;total=${record.total}&amp;token=${record.custbody_solupaysp_oauth_token}</#assign></span>
+
+<table align="right"><tr>
+	<td><a href="${paylink}"><img height="55" href="${paylink}" src="http://tstdrv1472101.shop.netsuite.com/core/media/media.nl?id=46630&amp;c=TSTDRV1472101&amp;h=f3f77898966c42569fd3" width="164" /></a></td>
+	</tr></table>
+<!--End Solupay Pay Link-->
+</body>
+</pdf>
