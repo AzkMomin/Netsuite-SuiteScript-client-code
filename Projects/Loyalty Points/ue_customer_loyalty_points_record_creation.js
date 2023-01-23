@@ -18,17 +18,19 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                 customrecord_loyalty_pointsSearchColScriptId,
             ],
         });
-        // Note: Search.run() is limited to 4,000 results
-        // customrecord_loyalty_pointsSearch.run().each((result: search.Result): boolean => {
-        //   return true;
-        // });
+
         const customrecord_loyalty_pointsSearchPagedData = customrecord_loyalty_pointsSearch.runPaged({ pageSize: 1000 });
-        for (let i = 0; i < customrecord_loyalty_pointsSearchPagedData.pageRanges.length; i++) {
-            const customrecord_loyalty_pointsSearchPage = customrecord_loyalty_pointsSearchPagedData.fetch({ index: i });
-            customrecord_loyalty_pointsSearchPage.data.forEach((result) => {
-                const id = result.getValue(customrecord_loyalty_pointsSearchColId);
-                const scriptId = result.getValue(customrecord_loyalty_pointsSearchColScriptId);
-            });
+        if (!customrecord_loyalty_pointsSearchPagedData.pageRanges.length) {
+            for (let i = 0; i < customrecord_loyalty_pointsSearchPagedData.pageRanges.length; i++) {
+                const customrecord_loyalty_pointsSearchPage = customrecord_loyalty_pointsSearchPagedData.fetch({ index: i });
+                customrecord_loyalty_pointsSearchPage.data.forEach((result) => {
+                    const id = result.getValue(customrecord_loyalty_pointsSearchColId);
+                    const scriptId = result.getValue(customrecord_loyalty_pointsSearchColScriptId);
+                    return id;
+                });
+            }
+        } else {
+
         }
     }
 
@@ -40,19 +42,57 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
 
         loyaltyPointsRec.setValue({ fieldId: "custrecord_lp_customer", value: customer });
         if (!membershipStartDate) {
-            loyaltyPointsRec.setValue({ fieldId: "custrecord_lp_startdate", value: membershipStartDate });
+            setDate(loyaltyPointsRec, "custrecord_lp_startdate", membershipStartDate)
         } else {
-            membershipStartDate = format.parse({
-                value: new Date(),
-                type: format.Type.DATE
-            });
-            loyaltyPointsRec.setValue({ fieldId: "custrecord_lp_startdate", value: membershipStartDate });
+            setDate(loyaltyPointsRec, "custrecord_lp_startdate", membershipStartDate)
         }
         const saveRec = loyaltyPointsRec.save();
         return saveRec;
     }
-    const updateCustLoyaltyPointRec = (id) => {
+    const updateCustLoyaltyPointRec = (id, date) => {
+        let loyaltyPointsRec = record.load({
+            type: "customrecord_loyalty_points",
+            id: id,
+            isDynamic: true
+        })
 
+        if (date.IsStartDate) {
+            setDate(loyaltyPointsRec, "custrecord_lp_startdate", date.Date)
+        } else {
+            setDate(loyaltyPointsRec, "custrecord_lp_expirydate", date.Date)
+        }
+    }
+
+    const setDate = (loyaltyPointsRec, fieldid, date) => {
+        if (date != "" && fieldid != "custrecord_lp_expirydate") {
+            date = date;
+        } else if (date == "" && fieldid != "custrecord_lp_expirydate") {
+            date = new Date;
+        }
+        else if (date != "" && fieldid == "custrecord_lp_expirydate") {
+            date = getSurplusPointExpireDate(date);
+        }
+        else if (date == "" && fieldid == "custrecord_lp_expirydate") {
+            date = getSurplusPointExpireDate(new Date);
+        }
+        loyaltyPointsRec.setValue({
+            fieldId: fieldid,
+            value: format.parse({
+                value: date,
+                type: format.Type.DATE
+            })
+        });
+    }
+    const getSurplusPointExpireDate = (date) => {
+        console.log(currentDate);
+        var month = currentDate.getMonth()+3;
+        if (month < 10) month = "0" + month;
+        var dateOfMonth = currentDate.getDate();
+        if (dateOfMonth < 10) dateOfMonth = "0" + dateOfMonth;
+        var year = currentDate.getFullYear();
+        var formattedDate = dateOfMonth + "/" + month + "/" + year;
+        log.debug(formattedDate);
+        return formattedDate;
     }
 
     const beforeSubmit = (context) => {
@@ -81,7 +121,7 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
         } else if (context.type == 'edit') {
             let oldRec = context.oldRecord;
             let newRec = context.newRecord;
-            let customer = newRec.getValue({ fieldId: "altname" });
+            let customer = context.newRecord.id
             let isMember_Oldrec = oldRec.getValue({ fieldId: "custentity_is_member" });
             let isMember_NewRec = newRec.getValue({ fieldId: "custentity_is_member" });
 
@@ -95,15 +135,15 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                 // Navigates to customer loyalty points record and update membership end date
 
                 // Fetch for customer loyalty pointr rec
-                let LoyaltyPointRec = getCustLoyaltyPointRec(customer);
-                updateCustLoyaltyPointRec(LoyaltyPointRec);
+                let custLoyaltyPointRecID = getCustLoyaltyPointRec(customer);
+                log.debug("loyalty points record ID : ", custLoyaltyPointRecID)
+                updateCustLoyaltyPointRec(custLoyaltyPointRecID, { IsStartDate: false, Date: membershipEndtDate_NewRec });
             }
             else if (isMember_Oldrec == false && isMember_NewRec) {
                 // Navigates to customer loyalty points record and update membership start date
-
-                if (!membershipStartDate_Oldrec && membershipStartDate_NewRec != "") {
-
-                }
+                let custLoyaltyPointRecID = getCustLoyaltyPointRec(customer);
+                log.debug("loyalty points record ID : ", custLoyaltyPointRecID)
+                updateCustLoyaltyPointRec(custLoyaltyPointRecID, { IsStartDate: true, Date: membershipStartDate_NewRec });
             }
         }
 
