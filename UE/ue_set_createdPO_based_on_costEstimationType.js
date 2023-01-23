@@ -4,14 +4,11 @@
 */
 define(['N/record', 'N/search'],
     function (record, search) {
-        function afterSubmit(context) {
+        function beforeSubmit(context) {
             if (context.type == 'create' || context.type == 'edit') {
-                var salesOrderRec = record.load({
-                    type: "salesorder",
-                    id: context.newRecord.id
-                })
+               
                 var SOLineCount = context.newRecord.getLineCount({ sublistId: 'item' });
-                log.debug("expenseLineCount : ", expenseLineCount);
+                log.debug("SOLineCount : ", SOLineCount);
                 for (var i = 0; i < SOLineCount; i++) {
                     var createPO = context.newRecord.getSublistValue({
                         sublistId: "item",
@@ -21,14 +18,14 @@ define(['N/record', 'N/search'],
 
                     if (createPO != "") {
                         log.debug(" field changed  empty ")
-                        salesOrderRec.setSublistValue({
+                        context.newRecord.setSublistValue({
                             sublistId: "item",
                             fieldId: "costestimatetype",
                             line: i,
                             value: "PURCHORDERRATE"
                         });
                     }else{
-                        salesOrderRec.setSublistValue({
+                        context.newRecord.setSublistValue({
                             sublistId: "item",
                             fieldId: "costestimatetype",
                             line: i,
@@ -36,11 +33,11 @@ define(['N/record', 'N/search'],
                         });
                     }
                 }
-                var salesOrderRecId = salesOrderRec.save();
-                log.debug("salesOrderRecId : ", salesOrderRecId);
+                // var salesOrderRecId = salesOrderRec.save();
+                // log.debug("salesOrderRecId : ", salesOrderRecId);
             }
         }
         return {
-            afterSubmit: afterSubmit
+            beforeSubmit: beforeSubmit
         };
     });
