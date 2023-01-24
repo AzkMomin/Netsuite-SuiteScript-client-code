@@ -1,83 +1,105 @@
 /**
-*@NApiVersion 2.x
-*@NScriptType ClientScript
-*/
-define(['N/search', 'N/ui/dialog', "N/record"],
-    function (search, dialog, record) {
-        var fieldChangeIds = [];
-        function fieldChanged(context) {
-            var fieldId = context.fieldId
-            var value = context.currentRecord.getValue({ fieldId: fieldId })
-            fieldChangeIds.push({ "fieldId": value })
+ *@NApiVersion 2.1
+ *@NScriptType ClientScript
+ */
+define(["N/search", "N/currentRecord"], function (search, currentRecord) {
+  var fieldChangeIds = [];
 
+  function fieldChanged(context) {
+    var id = context.fieldId;
+    if (id == "custbody_cmms_requesting_contact") {
+    } else if (id == "custpage_requesting_contract") {
+    } else if (id == "custbody_send_mail") {
+    } else if (id == "custbody_cmms_requesting_contact_phone") {
+    } else {
+      fieldChangeIds.push(context.fieldId);
+    }
+  }
+
+  function saveRecord(context) {
+    var record = currentRecord.get();
+    if (fieldChangeIds.length > 0) {
+      try {
+        if (
+          window.confirm(
+            "Do you want to notify customer about changes to the Order?"
+          )
+        ) {
+          var currentIdsJSON = context.currentRecord.getText({
+            fieldId: "custbody_field_changed_ids",
+          });
+          log.debug("currentIdsJSON : " + currentIdsJSON);
+          log.debug("currentIdsJSON : " + typeof currentIdsJSON);
+          if (JSON.parse(Object.keys(currentIdsJSON).length == 0)) {
+            var data = {};
+            setdata(data, fieldChangeIds, record);
+          } else {
+            log.debug("data found");
+            var parseCurrentIds = JSON.parse(currentIdsJSON);
+            setdata(parseCurrentIds, fieldChangeIds, record);
+          }
         }
+        return true;
+      } catch (e) {
+        log.debug("Error : ", e);
+        return false;
+      }
+    }
+    return true;
+  }
 
-        function saveRecord(context) {
-            log.debug('Field ids : ', fieldChangeIds)
-
-            for (var key in Object.keys(fieldChangeIds)) {
-                log.debug('field id : ', key)
-                if (key == 'custbody_cmms_requesting_contact') {}
-                else if (key == 'custpage_requesting_contract') {} 
-                else if (key == 'custbody_send_mail') {} 
-                else if (key == 'custbody_cmms_requesting_contact_phone') {} 
-                else {
-                    var options = {
-                        title: 'Confirm',
-                        message: 'Do you want to send massage of this field change.'
-                    };
-        
-                    //Send mail if user press ok
-                    function success(result) {
-                        //log.debug('Success with value ' + result);
-                        var proc = context.currentRecord.getValue({ fieldId: 'custbody_send_mail' })
-                        
-                        context.currentRecord.setValue({ fieldId: 'custbody_send_mail', value: true })
-        
-                        var otherId = record.submitFields({
-                            type: 'salesorder',
-                            id: context.currentRecord.id,
-                            values: {
-                                'custbody_send_mail': true
-                            }
-                        });
-                        log.debug('otherId ', otherId);
-                    }
-                    function failure(reason) {
-                        log.debug('Failure: ' + reason);
-                    }
-                    dialog.confirm(options).then(success).catch(failure);
-                }
-            }
-
-            var currentIds = context.currentRecord.getValue({ fieldId: 'custbody_ids_to_send_notification' })
-            for (var key in Object.keys(fieldChangeIds)) {
-                log.debug('keys : ', key)
-                if (key == 'custbody_cmms_requesting_contact') {
-                } else if (key == 'custpage_requesting_contract') {
-                } else if (key == 'custbody_send_mail') {
-                } else if (key == 'custbody_cmms_requesting_contact_phone') {
-                } else {
-
-                    if (currentIds.includes(key)) {
-                        var oldfieldValue = context.currentRecord.getValue({ fieldId: key })
-                        currentIds.replace(oldfieldValue, fieldChangeIds[key].fieldId);
-                    } else {
-                        currentIds += '<tr> <td> ' + key + ' <td> <td> ' + fieldChangeIds[key].fieldId + ' <td>  <tr>'
-
-                    }
-                }
-            }
-            context.currentRecord.setValue({ fieldId: 'custbody_ids_to_send_notification', value: currentIds })
-            log.debug('currentIds : ', currentIds)
-            return true
-        }
-        
-        return {
-
-            fieldChanged: fieldChanged,
-            saveRecord: saveRecord
-        };
+  function setdata(obj, fieldChangeIds, record) {
+    var data = obj;
+    for (var i = 0; i < fieldChangeIds.length; i++) {
+      var newfieldValue = record.getValue({ fieldId: fieldChangeIds[i] });
+      var fieldLabel = record.getField({
+        fieldId: fieldChangeIds[i],
+      });
+      data[fieldChangeIds[i]] = {
+        value: newfieldValue,
+        label: fieldLabel.label,
+      };
+    }
+    var stringCurrentIds = JSON.stringify(data);
+    record.setText({
+      fieldId: "custbody_field_changed_ids",
+      text: stringCurrentIds,
     });
 
+    var tableData = "";
+    var dataLength = Object.keys(data).length;
+    var i = 0;
+    log.debug("Table Length: " + dataLength);
 
+    for (var key in data) {
+      if (i == 0) {
+        tableData =
+          "<table border=1><tr style='background:#b9bbb6'><th>Field Name</th><th>Updated Value</th></tr>";
+      } else {
+        tableData +=
+          "<tr> <td> " +
+          data[key].label +
+          " </td> <td> " +
+          data[key].value +
+          " </td>  </tr>";
+        log.debug(`key : ${data[key].label} , data : ${data[key].value}`);
+
+        if (i == dataLength - 1) {
+          tableData += "</table>";
+        }
+      }
+      i++;
+    }
+    log.debug("tableData : " + tableData);
+
+    record.setValue({
+      fieldId: "custbody_ids_to_send_notification",
+      value: tableData,
+    });
+    record.setValue({ fieldId: "custbody_send_mail", value: true });
+  }
+  return {
+    fieldChanged: fieldChanged,
+    saveRecord: saveRecord,
+  };
+});

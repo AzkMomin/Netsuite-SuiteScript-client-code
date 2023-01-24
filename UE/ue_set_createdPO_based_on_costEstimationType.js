@@ -5,7 +5,7 @@
 define(['N/record', 'N/search'],
     function (record, search) {
         function beforeSubmit(context) {
-            if (context.type == 'create' || context.type == 'edit') {
+           // if (context.type == 'create' || context.type == 'edit') {
                
                 var SOLineCount = context.newRecord.getLineCount({ sublistId: 'item' });
                 log.debug("SOLineCount : ", SOLineCount);
@@ -35,7 +35,7 @@ define(['N/record', 'N/search'],
                 }
                 // var salesOrderRecId = salesOrderRec.save();
                 // log.debug("salesOrderRecId : ", salesOrderRecId);
-            }
+            //}
         }
         return {
             beforeSubmit: beforeSubmit
