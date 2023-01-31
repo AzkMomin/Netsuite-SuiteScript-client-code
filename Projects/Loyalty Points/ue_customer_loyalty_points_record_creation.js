@@ -13,12 +13,12 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
             let isMember = newRec.getValue({ fieldId: "custentity_is_member" });
             let membershipStartDate = newRec.getValue({ fieldId: "custentity_membership_start_date" });
             let membershipEndDate = newRec.getValue({ fieldId: "custentity_membership_end_date" });
-
+            
             //If is member is checked 
             if (isMember) {
                 // Create loyalty points record
                 let custLoyaltyPointRec = createCustLoyaltyPointRec(customer, membershipStartDate, membershipEndDate);
-                log.debug("loyalty points record save : ", custLoyaltyPointRec)
+                log.debug("loyalty points record save : ", custLoyaltyPointRec);
             }
 
         } else if (context.type == 'edit') {
