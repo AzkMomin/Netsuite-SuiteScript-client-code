@@ -91,70 +91,94 @@ define(["N/search", "N/file", "N/record", "N/sftp"], function (
           if (downloadedFile !== false) {
             //process ack files here
             var fileContents = downloadedFile.getContents();
-            var ackObject = JSON.parse(fileContents);
-            log.debug(
-              "Ack file Contents of " + fileName,
-              JSON.stringify(ackObject)
-            );
+            try {
+              var ackObject = JSON.parse(fileContents);
+              log.debug(
+                "Ack file Contents of " + fileName,
+                JSON.stringify(ackObject)
+              );
 
-            ackObject.forEach((result) => {
-              var objectCount = Object.keys(result).length;
-              if (objectCount > 0) {
-                for (key in result) {
-                  var docNo = result.DocNum;
-                  if (key == "DocNum") {
-                    //SO-MCB-42297-1234
-                    var docNoArray = docNo.split("-");
+              ackObject.forEach((result) => {
+                var objectCount = Object.keys(result).length;
+                if (objectCount > 0) {
+                  for (key in result) {
+                    var docNo = result.DocNum;
+                    if (key == "DocNum" && docNo != "") {
+                      //SO-MCB-42297-1234
+                      var docNoArray = docNo.split("-");
 
-                    try {
-                      if (result.AcceptedDate !== "") {
-                        var itemfulfillmentRecordId = record.submitFields({
+                      try {
+                        var itemFulfillmentRecord = record.load({
                           type: "itemfulfillment",
-                          id: docNoArray[3],
-                          values: {
-                            custbody_accepted_date: result.AcceptedDate,
-                            custbody_integrated_status: "2",
-                          },
+                          id: docNoArray[1],
                         });
+
+                        var currentIntegrationStatus =
+                          itemFulfillmentRecord.getValue({
+                            fieldId: "custbody_integrated_status",
+                          });
+
+                        if (currentIntegrationStatus != "4") {
+                          if (result.AcceptedDate != "") {
+                            var itemfulfillmentRecordId = record.submitFields({
+                              type: "itemfulfillment",
+                              id: docNoArray[1],
+                              values: {
+                                custbody_accepted_date: result.AcceptedDate,
+                                custbody_integrated_status: "2",
+                              },
+                            });
+                            log.debug(
+                              "itemfulfillmentRecordId saved for accepted date: ",
+                              itemfulfillmentRecordId
+                            );
+                          } else  {
+                            //if (result.RejectedDate !== "")
+                            var itemfulfillmentRecordId = record.submitFields({
+                              type: "itemfulfillment",
+                              id: docNoArray[1],
+                              values: {
+                                custbody_rejected_date: result.RejectedDate,
+                                custbody_rejected_reason: result.RejectReason,
+                                custbody_integrated_status: "3",
+                              },
+                            });
+                            log.debug(
+                              "itemfulfillmentRecordId saved for rejected date and reason : ",
+                              itemfulfillmentRecordId
+                            );
+                          }
+                        } else {
+                          log.debug(
+                            "Item Fulfillment record :: " +
+                              docNoArray[1] +
+                              " :: is already in shipped state"
+                          );
+                        }
+                      } catch (exp) {
                         log.debug(
-                          "itemfulfillmentRecordId saved : ",
-                          itemfulfillmentRecordId
-                        );
-                      } else if (result.RejectedDate !== "") {
-                        var itemfulfillmentRecordId = record.submitFields({
-                          type: "itemfulfillment",
-                          id: docNoArray[3],
-                          values: {
-                            custbody_accepted_date: result.RejectedDate,
-                            custbody_rejected_reason: result.RejectReason,
-                            custbody_integrated_status: "3",
-                          },
-                        });
-                        log.debug(
-                          "itemfulfillmentRecordId saved : ",
-                          itemfulfillmentRecordId
+                          "Item fulfillment record does not exist :: ",
+                          docNoArray[3]
                         );
                       }
-                    } catch (exp) {
-                      log.debug(
-                        "Item fulfillment record does not exist :: ",
-                        docNoArray[3]
-                      );
                     }
                   }
                 }
-              }
-            });
-
-            try {
-              // file processed, now move it to another directory
-              connection.move({
-                from: "ack/" + fileName,
-                to: "proc/" + fileName,
               });
-              log.debug("File moved successfully :: " + fileName);
+
+              try {
+                // file processed, now move it to another directory
+                connection.move({
+                  from: "ack/" + fileName,
+                  to: "proc/" + fileName,
+                });
+                log.debug("File moved successfully :: " + fileName);
+              } catch (e) {
+                log.debug("Failed to move file to proc :: " + fileName);
+              }
             } catch (e) {
-              log.debug("Failed to move file to proc :: " + fileName);
+              // failed to parse
+              log.debug("File has improper JSON :: " + fileName);
             }
           }
         }
@@ -177,87 +201,94 @@ define(["N/search", "N/file", "N/record", "N/sftp"], function (
           if (downloadedFile !== false) {
             //process ack files here
             var fileContents = downloadedFile.getContents();
-            var outboundObject = JSON.parse(fileContents);
-            log.debug(
-              "Outbound file Contents of " + fileName,
-              JSON.stringify(outboundObject)
-            );
+            try {
+              var outboundObject = JSON.parse(fileContents);
 
-            outboundObject.forEach((result) => {
-              var objectCount = Object.keys(result).length;
-              if (objectCount > 0) {
-                for (key in result) {
-                  var docNo = result.DocNum;
-                  var shippedDate = result.ShippedDate;
-                  var trackingNo = result.TrackingNo;
-                  if (key == "DocNum") {
-                    //SO-MCB-42297-1234
-                    var docNoArray = docNo.split("-");
+              log.debug(
+                "Outbound file Contents of " + fileName,
+                JSON.stringify(outboundObject)
+              );
 
-                    try {
-                      var itemfulfillmentRecordId = record.submitFields({
-                        type: "itemfulfillment",
-                        id: docNoArray[3],
-                        values: {
-                          custbody_integrated_status: "4",
-                        },
-                      });
+              outboundObject.forEach((result) => {
+                var objectCount = Object.keys(result).length;
+                if (objectCount > 0) {
+                  for (key in result) {
+                    var docNo = result.DocNum;
+                    var shippedDate = result.ShippedDate;
+                    var trackingNo = result.TrackingNo;
+                    if (key == "DocNum") {
+                      //SO-MCB-42297-1234
+                      var docNoArray = docNo.split("-");
 
-                      var itemFulfillmentRec = record.load({
-                        type: "itemfulfillment",
-                        id: docNoArray[3],
-                      });
+                      try {
+                        var itemfulfillmentRecordId = record.submitFields({
+                          type: "itemfulfillment",
+                          id: docNoArray[1],
+                          values: {
+                            custbody_integrated_status: "4",
+                          },
+                        });
 
-                      itemFulfillmentRec.setValue({
-                        fieldId: "shipstatus",
-                        value: "C",
-                      });
+                        var itemFulfillmentRec = record.load({
+                          type: "itemfulfillment",
+                          id: docNoArray[1],
+                        });
 
-                      itemFulfillmentRec.setValue({
-                        fieldId: "shippeddate",
-                        value: new Date(shippedDate),
-                      });
+                        itemFulfillmentRec.setValue({
+                          fieldId: "shipstatus",
+                          value: "C",
+                        });
 
-                      var itemWeight = itemFulfillmentRec.getValue({
-                        fieldId: "custbody_bol_fullfilment_weight",
-                      });
+                        itemFulfillmentRec.setValue({
+                          fieldId: "shippeddate",
+                          value: new Date(shippedDate),
+                        });
 
-                      itemFulfillmentRec.setSublistValue({
-                        sublistId: "package",
-                        fieldId: "packagetrackingnumber",
-                        line: 0,
-                        value: trackingNo,
-                      });
+                        var itemWeight = itemFulfillmentRec.getValue({
+                          fieldId: "custbody_bol_fullfilment_weight",
+                        });
 
-                      itemFulfillmentRec.setSublistValue({
-                        sublistId: "package",
-                        fieldId: "packageweight",
-                        line: 0,
-                        value: itemWeight, //For the timeBeing it hard coded to 5 ,else it will set itemWeight
-                      });
+                        itemFulfillmentRec.setSublistValue({
+                          sublistId: "package",
+                          fieldId: "packagetrackingnumber",
+                          line: 0,
+                          value: trackingNo,
+                        });
 
-                      itemFulfillmentRec.save();
+                        itemFulfillmentRec.setSublistValue({
+                          sublistId: "package",
+                          fieldId: "packageweight",
+                          line: 0,
+                          value: itemWeight, //For the timeBeing it hard coded to 5 ,else it will set itemWeight
+                        });
 
-                      log.debug(
-                        "itemfulfillmentRecordId saved : ",
-                        itemfulfillmentRecordId
-                      );
-                    } catch (exp) {
-                      log.debug("Item fulfillment record Error :: ", exp);
+                        itemFulfillmentRec.save();
+
+                        log.debug(
+                          "itemfulfillmentRecordId saved : ",
+                          itemfulfillmentRecordId
+                        );
+                      } catch (exp) {
+                        log.debug("Item fulfillment record Error :: ", exp);
+                      }
                     }
                   }
                 }
-              }
-            });
-            try {
-              // file processed, now move it to another directory
-              connection.move({
-                from: "outb/" + fileName,
-                to: "proc/" + fileName,
               });
-              log.debug("File moved successfully :: " + fileName);
+
+              try {
+                // file processed, now move it to another directory
+                connection.move({
+                  from: "outb/" + fileName,
+                  to: "proc/" + fileName,
+                });
+                log.debug("File moved successfully :: " + fileName);
+              } catch (e) {
+                log.debug("Failed to move file to proc :: " + fileName);
+              }
             } catch (e) {
-              log.debug("Failed to move file to proc :: " + fileName);
+              // failed to parse
+              log.debug("File has improper JSON :: " + fileName);
             }
           }
         }

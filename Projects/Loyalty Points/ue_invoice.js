@@ -5,131 +5,120 @@
 
 define(['N/search', "N/record", "N/format"], function (search, record, format) {
     const beforeSubmit = (context) => {
-        if (context.type == 'create') {
-            let newRec = context.newRecord;
-            let status = newRec.getValue({ fieldId: "status" });
+        if (context.type == 'create' || context.type == 'edit') {
+            const newRec = context.newRecord;
+            const SO_ID = newRec.getValue({ fieldId: "createdfrom" });
+            const customerID = newRec.getValue({ fieldId: "entity" });
+            log.debug("createdFrom : ", SO_ID)
+            log.debug("customerID : ", customerID)
+            //Looking for payment method
+            var So_Fields = search.lookupFields({
+                type: 'salesorder',
+                id: SO_ID,
+                columns: ['custbody_pay_meth_is_lp']
+            });
+            log.debug("So_Fields.custbody_pay_meth_is_lp : ", So_Fields.custbody_pay_meth_is_lp)
+            var customerFields = search.lookupFields({
+                type: 'customer',
+                id: customerID,
+                columns: ['custentity_lp_balance', "custentity_lp_reference"]
+            });
+            log.debug("customerFields.custentity_lp_balance : ", customerFields.custentity_lp_balance)
 
+            if (So_Fields.custbody_pay_meth_is_lp) {
+                var LP_Balance = customerFields.custentity_lp_balance;
+                let isAlerted = false;
+                if (!customerFields.custentity_lp_balance) {
 
-            //Check for shipped status
-            if (status == "Shipped") {
-                let SO_ID = newRec.getValue({ fieldId: "createdfrom" });
-                let customerID = newRec.getValue({ fieldId: "entity" });
+                } else {
+                    // if no Loyalty points availabe 
+                    const invLineCount = newRec.getLineCount({ sublistId: "item" });
+                    for (let i = 0; i < invLineCount; i++) {
+                        const invItemId = newRec.getSublistValue({
+                            sublistId: 'item',
+                            fieldId: "item",
+                            line: i
+                        });
 
-                var So_Fields = search.lookupFields({
-                    type: 'salesorder',
-                    id: SO_ID,
-                    columns: ['custentity_is_member']
-                });
-                //Get for expire date > today
-                let expireIsGraterThenToday = expireIsGrater(customerID)
-                //Check for isMember is true &&  expire date > today
-                if (So_Fields.custentity_is_member && expireIsGraterThenToday.IsTrue) {
-                    newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true })
+                        const SORecord = record.load({
+                            type: "salesorder",
+                            id: SO_ID,
+                        });
+                        const SO_LineCount = SORecord.getLineCount({ sublistId: "item" });
+
+                        for (let s = 0; s < SO_LineCount; s++) {
+                            let SOitemId = newRec.getSublistValue({
+                                sublistId: 'item',
+                                fieldId: "item",
+                                line: s
+                            });
+
+                            if (invItemId == SOitemId) {
+                                let redeemRate = newRec.getSublistValue({
+                                    sublistId: 'item',
+                                    fieldId: "custcol_redemption_rate",
+                                    line: s
+                                });
+
+                                const qty = newRec.getSublistValue({
+                                    sublistId: 'item',
+                                    fieldId: "quantity",
+                                    line: i
+                                });
+                                var lp_RedeemAble = qty * redeemRate;
+                                // log.debug("lp_RedeemAble : ", lp_RedeemAble);
+                                let tempLpBalance = LP_Balance;
+                                // log.debug("tempLpBalance : ", tempLpBalance);
+                                tempLpBalance -= lp_RedeemAble;
+                                if (LP_Balance <= 0 && isAlerted == false) {
+                                    window.alert("LPs not redeemed for all items as the LPs balance is zero");
+                                    isAlerted = true
+                                }
+
+                                newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_redemption_rate", line: i, value: redeemRate });
+                                newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lp_redeemable", line: i, value: lp_RedeemAble });
+                                if (tempLpBalance >= 0 && LP_Balance > 0) {// LP balance contains some balance
+                                    // log.debug("tempLpBalance >= 0 && LP_Balance > 0 : ");
+                                    // log.debug("LP_Balance : ", LP_Balance);
+                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeened", line: i, value: (lp_RedeemAble) * -1 });
+                                    LP_Balance -= lp_RedeemAble;
+
+                                } else if (tempLpBalance <= 0 && LP_Balance > 0) {//LP balance contains some balance but after deduction it would be -ve
+                                    // log.debug("tempLpBalance <= 0 && LP_Balance > 0 : ");
+                                    // log.debug("LP_Balance : ", LP_Balance);
+                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeened", line: i, value: (LP_Balance) * -1 });
+                                    LP_Balance -= lp_RedeemAble;
+
+                                } else {
+                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeened", line: i, value: 0 });
+                                    log.debug("LP_Balance : ", LP_Balance);
+                                }
+                            }
+                        }
+                    }
+
+                    var totalRedeem = 0;
+                    for (let i = 0; i < invLineCount; i++) {
+                        const lpRedeemed = newRec.getSublistValue({
+                            sublistId: 'item',
+                            fieldId: "custcol_lps_redeened",
+                            line: i
+                        });
+                        totalRedeem += lpRedeemed;
+                    }
+                    log.debug("totalRedeem : ", totalRedeem);
+                    log.debug("LP Reference ID : ", customerFields.custentity_lp_reference[0].value);
+                    newRec.setValue({ fieldId: 'custbody_total_lps_redeemed', value: (totalRedeem) * -1 });
+                    newRec.setValue({ fieldId: 'custbody_lp_record_reference', value: customerFields.custentity_lp_reference[0].value });
+
+                    newRec.setSublistValue({ sublistId: "item", fieldId: "item", line: invLineCount, value: 24838 });
+                    newRec.setSublistValue({ sublistId: "item", fieldId: "rate", line: invLineCount, value: (totalRedeem) * -1 });
+                    newRec.setSublistValue({ sublistId: "item", fieldId: "amount", line: invLineCount, value: (totalRedeem) * -1 });
+                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeened", line: invLineCount, value: totalRedeem });
                 }
-                if (custLP_Rec.found == false) {
-                    createLoyaltyPointRec(customerID, member.startDate)
-                }
-            }
-
-        }
-        else if (context.type == 'edit') {
-            let newRec = context.newRecord;
-            let tranDate = newRec.getValue({ fieldId: "trandate" });
-            let customerID = newRec.getValue({ fieldId: "entity" });
-            let member = getMember(customerID);
-            log.debug('member : ', member)
-            if (member.isActive) {
-                let betweenDate = IsfallInMembershipDate(tranDate, member.startDate, member.expireDate);
-                log.debug('betweenDate : ', betweenDate)
-                if (betweenDate.IsInBetween) {
-                    newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true })
-                }
-
-            }
-        }
-
-    }
-
-    const expireIsGrater = (customerID) => {
-        var customerFields = search.lookupFields({
-            type: search.Type.CUSTOMER,
-            id: customerId,
-            columns: ['custentity_membership_start_date', 'custentity_membership_end_date']
-        });
-
-        let custLoyaltyPointRec = getCustLoyaltyPointRec(customerID,customerFields.custentity_membership_start_date);
-        return getCheckExpire(custLoyaltyPointRec);
-
-    }
-    const getCustLoyaltyPointRec = (customer,startDate) => {
-        //Fetch record
-        const customrecord_loyalty_pointsSearchColId = search.createColumn({ name: 'id', sort: search.Sort.ASC });
-        const customrecord_loyalty_pointsSearchColScriptId = search.createColumn({ name: 'scriptid' });
-        const customrecord_loyalty_pointsSearchColStartDate = search.createColumn({ name: 'custrecord_lp_startdate' });
-        const customrecord_loyalty_pointsSearchColExpiryDate = search.createColumn({ name: 'custrecord_lp_expirydate' });
-
-        const customrecord_loyalty_pointsSearch = search.create({
-            type: 'customrecord_loyalty_points',
-            filters: [
-                ['custrecord_lp_customer', 'anyof', customer],
-                'AND',
-                ['custrecord_lp_startdate', 'on', startDate],
-            ],
-            columns: [
-                customrecord_loyalty_pointsSearchColId,
-                customrecord_loyalty_pointsSearchColScriptId,
-                customrecord_loyalty_pointsSearchColStartDate,
-                customrecord_loyalty_pointsSearchColExpiryDate,
-            ],
-        });
-
-        const customrecord_loyalty_pointsSearchPagedData = customrecord_loyalty_pointsSearch.runPaged({ pageSize: 1000 });
-        if (!customrecord_loyalty_pointsSearchPagedData.pageRanges.length) {
-            for (let i = 0; i < customrecord_loyalty_pointsSearchPagedData.pageRanges.length; i++) {
-                const customrecord_loyalty_pointsSearchPage = customrecord_loyalty_pointsSearchPagedData.fetch({ index: i });
-                customrecord_loyalty_pointsSearchPage.data.forEach((result) => {
-                    const id = result.getValue(customrecord_loyalty_pointsSearchColId);
-                    const startDate = result.getValue(customrecord_loyalty_pointsSearchColStartDate);
-                    const expiryDate = result.getValue(customrecord_loyalty_pointsSearchColExpiryDate);
-                    return {
-                        found: true,
-                        id: id,
-                        startDate :startDate,
-                        expiryDate : expiryDate
-                    };
-                });
-            }
-        } else {
-            return {
-                found: false
-            };
-        }
-    }
-
-    const getCheckExpire = (custLoyaltyPointRec)=>{
-        let expireDate = custLoyaltyPointRec.expireDate;
-        let today = getFormatedDate(new Date());
-
-        var d1 = expireDate.split("/");
-        var d2 = today.split("/");
-       
-
-        var checkExpireDate = new Date(d1[2], parseInt(d1[1]) - 1, d1[0]);  // -1 because months are from 0 to 11
-        var checkToday = new Date(d2[2], parseInt(d2[1]) - 1, d2[0]);
-        
-        if ( checkExpireDate > checkToday) {
-            return {
-                "IsTrue": true
-            }
-        } else {
-            return {
-                "IsTrue": false
             }
         }
     }
-    
-
-
     return {
         beforeSubmit,
     }

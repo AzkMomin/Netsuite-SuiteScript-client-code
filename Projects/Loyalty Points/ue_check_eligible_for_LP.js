@@ -9,39 +9,41 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
             let newRec = context.newRecord;
             let customerID = newRec.getValue({ fieldId: "entity" });
             let tranDate = newRec.getValue({ fieldId: "trandate" });
-            let custLP_RecID = newRec.getValue({ fieldId: "custentity_lp_reference" });
+            var customerFields = search.lookupFields({
+                type: 'customer',
+                id: customerID,
+                columns: ['custentity_is_member','custentity_lp_reference']
+            });
             const SoLineCount = newRec.getLineCount({ sublistId: "item" });
             for (let i = 0; i < SoLineCount; i++) {
-                let itemId = getSublistValue({
+                let itemId = newRec.getSublistValue({
                     sublistId: 'item',
                     fieldId: "item",
                     line: i
                 });
 
-                var customerFields = search.lookupFields({
+                var invantoryItemFields = search.lookupFields({
                     type: 'inventoryitem',
                     id: itemId,
                     columns: ['custitem_lps_redeemable_per_unit']
                 });
-                newRec.setSublistValue({sublistId : "item",fieldId : "custcol_redemption_rate" , line : i , value:customerFields.custitem_lps_redeemable_per_unit})
+                newRec.setSublistValue({sublistId : "item",fieldId : "custcol_redemption_rate" , line : i , value:invantoryItemFields.custitem_lps_redeemable_per_unit})
 
             }
             //Check for active member
             let member = getMember(customerID);
             log.debug('member : ', member)
-            if (member.isActive) {
+            if (customerFields.custentity_is_member) {
                 log.debug('Eligible for LPs because isMember is true : ')
                 //Check for member is active : if true then set eligible for lps to true
                     newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true })
-            }else if(!custLP_RecID){
+            }else if(!customerFields.custentity_lp_reference){
                 log.debug('Eligible for LPs because Customer record contains LPs : ')
                 // check for LP reference is present 
                 newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true })
             }else{
-                // LP reference is not present but fall bet
+                // LP reference is not present but fall between LP dates
                 let betweenDate = IsfallInMembershipDate(tranDate, member.startDate, member.expireDate);
-                // let formatedTranDate = getFormatedDate(tranDate)
-                // let custLP_Rec = getCustLoyaltyPointRec(customerID, formatedTranDate);
                 log.debug('betweenDate : ', betweenDate)
                 if (betweenDate.IsInBetween) {
                     log.debug('Eligible for LPs because trandate falls between membership date : ')

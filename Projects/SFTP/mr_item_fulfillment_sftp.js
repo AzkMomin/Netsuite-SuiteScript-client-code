@@ -60,46 +60,39 @@ define(["N/search", "N/file", "N/record", "N/sftp"], function (
     // log.debug("inboundData : " , JSON.parse(inboundData));
 
     var totalInboundRecords = [];
-    let orderIdRecords = new Map();
+    var orderIdRecords = [];
 
     if (inboundData.length > 0) {
       for (var i = 0; i < inboundData.length; i++) {
-
-        // totalInboundRecords.push(JSON.parse(inboundData[i]));
-        var orderId = JSON.parse(inboundData[i])["Order ID"];
-        var insideLoop = true
-        if (orderIdRecords.size != 0) {
-          orderIdRecords.forEach((value, key) => {
-            if (insideLoop) {
-              if (key == orderId) {
-
-                orderIdRecords.set(orderId, value + String(i))
-                insideLoop = false
-              } else {
-
-                orderIdRecords.set(orderId, String(i))
-                insideLoop = false
-              }
+        var orderId = inboundData[i]["Order ID"];
+        var notFound = true
+        if (orderIdRecords.length > 0) {
+          for (var j = 0; j < orderIdRecords.length; j++) {
+            if (parseInt(orderIdRecords[j].key) == parseInt(orderId)) {
+              orderIdRecords[j].value = (orderIdRecords[j].value).concat(String(i))
+              notFound = false
             }
-          })
+          }
+          if (notFound) {
+            orderIdRecords.push({ key: orderId, value: String(i) })
+          }
         } else {
-
-          orderIdRecords.set(orderId, String(i))
+          orderIdRecords.push({ key: orderId, value: String(i) })
         }
-
       }
     }
-    orderIdRecords.forEach((value, key) => {
-      let tempArray = []
-      if (value.length > 1) {
-        for (var i = 0; i < value.length; i++) {
-          tempArray.push(JSON.parse(inboundData[parseInt(value.charAt(i))]))
+    log.debug("orderIdRecords : ", orderIdRecords);
+    for (var j = 0; j < orderIdRecords.length; j++) {
+      var tempArray = []
+      if ((orderIdRecords[j].value).length > 1) {
+        for (var i = 0; i < (orderIdRecords[j].value).length; i++) {
+          tempArray.push(inboundData[parseInt(String(orderIdRecords[j].value).charAt(i))])
         }
         totalInboundRecords.push(tempArray)
       } else {
-        totalInboundRecords.push(JSON.parse(inboundData[parseInt(value.charAt(i))]))
+        totalInboundRecords.push((inboundData[parseInt(String(orderIdRecords[j].value))]))
       }
-    })
+    }
     log.debug("totalInboundRecords : ", totalInboundRecords);
 
     //got all the data in a JSON array. Now push those to the inbound file
@@ -145,6 +138,7 @@ define(["N/search", "N/file", "N/record", "N/sftp"], function (
             id: internalId,
             values: {
               custbody_integrated_status: "1",
+              custbody_inbound_fileid: fileName,
             },
           });
 
@@ -193,6 +187,8 @@ define(["N/search", "N/file", "N/record", "N/sftp"], function (
       padTo2Digits(date.getMonth() + 1),
       padTo2Digits(date.getDate()),
       date.getFullYear(),
+      date.getHours(),
+      date.getMinutes(),
     ].join("");
   }
 
