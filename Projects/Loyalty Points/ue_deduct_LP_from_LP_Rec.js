@@ -21,7 +21,6 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                 total_LP_to_deducted += amount
             }
 
-
             log.debug(' loyalty points to be deducted from LP rec : ', total_LP_to_deducted)
 
             var customerFields = search.lookupFields({
@@ -44,7 +43,8 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                     "custrecord_lp_balance": LP_Balance_Remains
                 }
             });
-
+            newRec.setValue({ fieldId: 'custbody_lp_awarded', value: (total_LP_to_deducted) * -1 });
+            newRec.setValue({ fieldId: 'custbody_lp_record_reference', value: customerFields.custentity_lp_reference });
             log.debug('Final loyalty points detucted saved LP rec id : ', LPSaveID);
 
 

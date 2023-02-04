@@ -3,7 +3,8 @@
  * @NScriptType UserEventScript
  */
 
-define(['N/search', "N/record", "N/format"], function (search, record, format) {
+define(['N/search', "N/record", 'N/ui/message'], function (search, record, message) {
+    
     const beforeSubmit = (context) => {
         if (context.type == 'create' || context.type == 'edit') {
             const newRec = context.newRecord;
@@ -27,7 +28,7 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
 
             if (So_Fields.custbody_pay_meth_is_lp) {
                 var LP_Balance = customerFields.custentity_lp_balance;
-                let isAlerted = false;
+                var showAlert = false;
                 if (!customerFields.custentity_lp_balance) {
 
                 } else {
@@ -71,55 +72,76 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                                 // log.debug("tempLpBalance : ", tempLpBalance);
                                 tempLpBalance -= lp_RedeemAble;
                                 if (LP_Balance <= 0 && isAlerted == false) {
-                                    window.alert("LPs not redeemed for all items as the LPs balance is zero");
-                                    isAlerted = true
+
+                                    showAlert = true
                                 }
 
                                 newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_redemption_rate", line: i, value: redeemRate });
                                 newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lp_redeemable", line: i, value: lp_RedeemAble });
                                 if (tempLpBalance >= 0 && LP_Balance > 0) {// LP balance contains some balance
-                                    // log.debug("tempLpBalance >= 0 && LP_Balance > 0 : ");
-                                    // log.debug("LP_Balance : ", LP_Balance);
-                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeened", line: i, value: (lp_RedeemAble) * -1 });
-                                    LP_Balance -= lp_RedeemAble;
 
+                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: i, value: (lp_RedeemAble) * -1 });
+                                    LP_Balance -= lp_RedeemAble;
                                 } else if (tempLpBalance <= 0 && LP_Balance > 0) {//LP balance contains some balance but after deduction it would be -ve
-                                    // log.debug("tempLpBalance <= 0 && LP_Balance > 0 : ");
-                                    // log.debug("LP_Balance : ", LP_Balance);
-                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeened", line: i, value: (LP_Balance) * -1 });
+                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: i, value: (LP_Balance) * -1 });
                                     LP_Balance -= lp_RedeemAble;
 
+                                    showAlert = true
                                 } else {
-                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeened", line: i, value: 0 });
+                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: i, value: 0 });
                                     log.debug("LP_Balance : ", LP_Balance);
+                                    showAlert = true
                                 }
                             }
                         }
                     }
 
                     var totalRedeem = 0;
+
                     for (let i = 0; i < invLineCount; i++) {
                         const lpRedeemed = newRec.getSublistValue({
                             sublistId: 'item',
-                            fieldId: "custcol_lps_redeened",
+                            fieldId: "custcol_lps_redeemed",
                             line: i
                         });
                         totalRedeem += lpRedeemed;
                     }
                     log.debug("totalRedeem : ", totalRedeem);
                     log.debug("LP Reference ID : ", customerFields.custentity_lp_reference[0].value);
-                    newRec.setValue({ fieldId: 'custbody_total_lps_redeemed', value: (totalRedeem) * -1 });
+                    newRec.setValue({ fieldId: 'custbody_total_lps_redeemed', value: totalRedeem });
                     newRec.setValue({ fieldId: 'custbody_lp_record_reference', value: customerFields.custentity_lp_reference[0].value });
 
                     newRec.setSublistValue({ sublistId: "item", fieldId: "item", line: invLineCount, value: 24838 });
                     newRec.setSublistValue({ sublistId: "item", fieldId: "rate", line: invLineCount, value: (totalRedeem) * -1 });
                     newRec.setSublistValue({ sublistId: "item", fieldId: "amount", line: invLineCount, value: (totalRedeem) * -1 });
-                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeened", line: invLineCount, value: totalRedeem });
+                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: invLineCount, value: (totalRedeem) * -1 });
+
+               
+
+                    var LP_Fields = search.lookupFields({
+                        type: 'customrecord_loyalty_points',
+                        id: customerFields.custentity_lp_reference,
+                        columns: ['custrecord_lp_balance']
+                    });
+                    let finalLP_Balance = LP_Fields.custrecord_lp_balance - totalRedeem;
+                    log.debug("LP Record Final Balance remain after deduction  : ", finalLP_Balance);
+                    var LP_RecId = record.submitFields({
+                        type: "customrecord_loyalty_points",
+                        id: customerFields.custentity_lp_reference,
+                        values: {
+                            'custrecord_lp_balance': finalLP_Balance
+                        }
+                    });
+
+                    log.debug("LP Record Balance Updated with id  : ", LP_RecId);
                 }
             }
         }
     }
+
+   
     return {
         beforeSubmit,
+       
     }
 });

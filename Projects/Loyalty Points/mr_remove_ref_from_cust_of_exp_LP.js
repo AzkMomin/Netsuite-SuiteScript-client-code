@@ -29,19 +29,14 @@ define([
         var LP_RecResult = JSON.parse(context.value);
         log.debug('searchResult : ', LP_RecResult)
         log.debug('searchResult id: ', LP_RecResult.id)
-
-        // var LP_RecId = record.submitFields({
-        //     type: "customer",
-        //     id: LP_RecResult.id,
-        //     values: {
-        //         'custitem_anc_overall_subitem_qty': overAllQty
-        //     }
-        // });
-        // let itemRec = record.load({
-        //     type: "customrecord_loyalty_points",
-        //     id: LP_RecResult.id,
-        //     isDynamic: true
-        // })
+        const customerId = LP_RecResult.values.custrecord_lp_customer.value
+        var LP_RecId = record.submitFields({
+            type: "customer",
+            id: customerId,
+            values: {
+                'custentity_lp_reference': null
+            }
+        });
 
         log.debug("Expired record LP id : ", LP_RecId)
 

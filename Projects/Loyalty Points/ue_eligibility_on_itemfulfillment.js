@@ -69,8 +69,6 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                     }
                 }
 
-
-
                 log.debug("equivalentDollarValue : ", equivalentDollarValue);
 
                 newRec.setValue({ fieldId: "custbody_lp_record_reference", value: customerFields.custentity_lp_reference })
