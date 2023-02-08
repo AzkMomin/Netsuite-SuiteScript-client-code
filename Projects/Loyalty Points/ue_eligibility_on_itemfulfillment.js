@@ -18,20 +18,21 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                 var So_Fields = search.lookupFields({
                     type: 'salesorder',
                     id: SO_ID,
-                    columns: ['custentity_is_member']
+                    columns: ['custbody_is_eligible_for_lps']
                 });
                 var customerFields = search.lookupFields({
                     type: 'customer',
                     id: customerID,
                     columns: ['custentity_lp_reference']
                 });
-            
+
                 // let expireIsGraterThenToday = expireIsGrater(customerID)
-                
-                if (So_Fields.custentity_is_member && !customerFields.custentity_lp_reference) {//Check for isMember is true &&  customer rec contains LP reference
+                log.debug("Is eligible for lps on SO : ", So_Fields.custbody_is_eligible_for_lps);
+                log.debug("reference of LP record on customer : ", customerFields.custentity_lp_reference[0].value);
+                if (So_Fields.custbody_is_eligible_for_lps && customerFields.custentity_lp_reference[0].value != "") {//Check for isMember is true &&  customer rec contains LP reference
                     const itemFullLineCount = newRec.getLineCount({ sublistId: "item" });
                     for (let i = 0; i < itemFullLineCount; i++) {
-                        let itemFulfillmentItemId = getSublistValue({
+                        let itemFulfillmentItemId = newRec.getSublistValue({
                             sublistId: 'item',
                             fieldId: "item",
                             line: i
@@ -42,56 +43,57 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                             id: SO_ID,
                         });
                         const SO_LineCount = SORecord.getLineCount({ sublistId: "item" });
-
+                        
                         for (let s = 0; s < SO_LineCount; s++) {
-                            let SOitemId = getSublistValue({
+                            let SOitemId = SORecord.getSublistValue({
                                 sublistId: 'item',
                                 fieldId: "item",
                                 line: s
                             })
 
                             if (itemFulfillmentItemId == SOitemId) {
-                                let itemFulFillmentQty = getSublistValue({
+                                
+                                let itemFulFillmentQty = newRec.getSublistValue({
                                     sublistId: 'item',
                                     fieldId: "quantity",
                                     line: i
                                 })
-                                let SOitemRate = getSublistValue({
+                                let SOitemRate = SORecord.getSublistValue({
                                     sublistId: 'item',
                                     fieldId: "rate",
                                     line: s
                                 })
-
+                                log.debug("itemFulFillmentQty : ", itemFulFillmentQty);
+                                log.debug("SOitemRate : ", SOitemRate);
                                 equivalentDollarValue += (itemFulFillmentQty * SOitemRate)
                             }
                         }
 
                     }
+
+                    log.debug("equivalentDollarValue : ", equivalentDollarValue);
+
+                    var LP_Fields = search.lookupFields({
+                        type: 'customrecord_loyalty_points',
+                        id: customerFields.custentity_lp_reference[0].value,
+                        columns: ['custrecord_lp_balance']
+                    });
+
+                    let finalLpPoints = parseFloat(LP_Fields.custrecord_lp_balance) + parseFloat(equivalentDollarValue)
+                    log.debug('Final loyalty points calculated : ', finalLpPoints);
+                    const LPSaveID = record.submitFields({
+                        type: "customrecord_loyalty_points",
+                        id: customerFields.custentity_lp_reference[0].value,
+                        values: {
+                            "custrecord_lp_balance": finalLpPoints.toFixed(2)
+                        }
+                    });
+
+                    log.debug('Final loyalty points calculated saved LP rec id : ', LPSaveID);
+
+                    newRec.setValue({ fieldId: "custbody_lp_record_reference", value: LPSaveID})
+                    newRec.setValue({ fieldId: "custbody_lp_awarded", value: equivalentDollarValue })
                 }
-
-                log.debug("equivalentDollarValue : ", equivalentDollarValue);
-
-                newRec.setValue({ fieldId: "custbody_lp_record_reference", value: customerFields.custentity_lp_reference })
-                newRec.setValue({ fieldId: "custbody_lp_awarded", value: equivalentDollarValue })
-
-                var LP_Fields = search.lookupFields({
-                    type: 'customrecord_loyalty_points',
-                    id: customerFields.custentity_lp_reference,
-                    columns: ['custrecord_lp_balance']
-                });
-
-                let finalLpPoints = LP_Fields.custrecord_lp_balance + equivalentDollarValue
-                log.debug('Final loyalty points calculated : ', finalLpPoints)
-                const LPSaveID = record.submitFields({
-                    type: "customer",
-                    id: customerID,
-                    values: {
-                        "custrecord_lp_balance": finalLpPoints
-                    }
-                });
-
-                log.debug('Final loyalty points calculated saved LP rec id : ', LPSaveID);
-
             }
         }
     }

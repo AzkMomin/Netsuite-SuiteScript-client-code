@@ -9,60 +9,71 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
             let newRec = context.newRecord;
             let customerID = newRec.getValue({ fieldId: "entity" });
             let tranDate = newRec.getValue({ fieldId: "trandate" });
-            var customerFields = search.lookupFields({
-                type: 'customer',
-                id: customerID,
-                columns: ['custentity_is_member','custentity_lp_reference']
-            });
-            const SoLineCount = newRec.getLineCount({ sublistId: "item" });
-            for (let i = 0; i < SoLineCount; i++) {
-                let itemId = newRec.getSublistValue({
-                    sublistId: 'item',
-                    fieldId: "item",
-                    line: i
-                });
 
-                var invantoryItemFields = search.lookupFields({
-                    type: 'inventoryitem',
-                    id: itemId,
-                    columns: ['custitem_lps_redeemable_per_unit']
-                });
-                newRec.setSublistValue({sublistId : "item",fieldId : "custcol_redemption_rate" , line : i , value:invantoryItemFields.custitem_lps_redeemable_per_unit})
-
+            var checkForDates = true
+            if (context.type == 'edit') {
+                let oldRec = context.oldRecord;
+                let oldtranDate = oldRec.getValue({ fieldId: "trandate" });
+                log.debug('tranDate : ', tranDate)
+                log.debug('oldtranDate : ', oldtranDate)
+                if (String(oldtranDate) === String(tranDate)) {
+                    log.debug(' Old And new Dates are not equal ')
+                    checkForDates = false
+                }
             }
-            //Check for active member
-            let member = getMember(customerID);
-            log.debug('member : ', member)
-            if (customerFields.custentity_is_member) {
-                log.debug('Eligible for LPs because isMember is true : ')
-                //Check for member is active : if true then set eligible for lps to true
-                    newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true })
-            }else if(!customerFields.custentity_lp_reference){
-                log.debug('Eligible for LPs because Customer record contains LPs : ')
-                // check for LP reference is present 
-                newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true })
-            }else{
+            //If old trandate == new trandate on edit then dont check further
+            if (checkForDates) {
+                var customerFields = search.lookupFields({
+                    type: 'customer',
+                    id: customerID,
+                    columns: ['custentity_is_member', 'custentity_lp_reference']
+                });
+                const SoLineCount = newRec.getLineCount({ sublistId: "item" });
+                for (let i = 0; i < SoLineCount; i++) {
+                    let itemId = newRec.getSublistValue({
+                        sublistId: 'item',
+                        fieldId: "item",
+                        line: i
+                    });
+
+                    var invantoryItemFields = search.lookupFields({
+                        type: 'inventoryitem',
+                        id: itemId,
+                        columns: ['custitem_lps_redeemable_per_unit']
+                    });
+                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_redemption_rate", line: i, value: invantoryItemFields.custitem_lps_redeemable_per_unit })
+
+                }
+                let member = getMember(customerID);
+                log.debug('member : ', member)
+
                 // LP reference is not present but fall between LP dates
                 let betweenDate = IsfallInMembershipDate(tranDate, member.startDate, member.expireDate);
                 log.debug('betweenDate : ', betweenDate)
                 if (betweenDate.IsInBetween) {
                     log.debug('Eligible for LPs because trandate falls between membership date : ')
                     newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true });
-                    const LP_RecId = createLoyaltyPointRec(customerID, member.startDate);
-                    const customerSaveID = record.submitFields({
-                        type: "customer",
-                        id: customerID,
-                        values:{
-                            "custentity_lp_reference" : LP_RecId
-                        }
-                    });
-                    log.debug("Successfully set reference of newly created LP record : ID : " , customerSaveID);
+                    if (!customerFields.custentity_lp_reference) {
+                        // LP reference is not present but fall between LP dates
+                        const LP_RecId = createLoyaltyPointRec(customerID, member.startDate);
+                        const customerSaveID = record.submitFields({
+                            type: "customer",
+                            id: customerID,
+                            values: {
+                                "custentity_lp_reference": LP_RecId
+                            }
+                        });
+                        log.debug("Successfully set reference of newly created LP record : ID : ", customerSaveID);
+                    }
                 }
+
             }
+
         }
+
     }
 
-    
+
     const IsfallInMembershipDate = (tranDate, startDate, expireDate) => {
         let formatedtranDate = getFormatedDate(tranDate);
         log.debug('tranDate : ', tranDate)
@@ -77,26 +88,29 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
         let mm = date.getMonth() + 1; // Months start at 0!
         let dd = date.getDate();
 
-        if (dd < 10) dd = '0' + dd;
-        if (mm < 10) mm = '0' + mm;
+        // if (dd < 10) dd = '0' + dd;
+        // if (mm < 10) mm = '0' + mm;
 
         const formattedDate = mm + '/' + dd + '/' + yyyy;
         return formattedDate
     }
 
     const dateIsINBetween = (trandate, StartDate, ExpireDate) => {
-        var dateFrom = StartDate;
-        var dateTo = ExpireDate;
-        var dateCheck = trandate;
+        var dateFrom = new Date(StartDate);
+        var dateTo = new Date(ExpireDate);
+        var dateCheck = new Date(trandate);
+        log.debug("StartDate : ", StartDate)
+        log.debug("ExpireDate : ", ExpireDate)
+        // var d1 = dateFrom.split("/");
+        // var d2 = dateTo.split("/");
+        // var c = dateCheck.split("/");
 
-        var d1 = dateFrom.split("/");
-        var d2 = dateTo.split("/");
-        var c = dateCheck.split("/");
+        // var from = new Date(d1[2], parseInt(d1[1]) - 1, d1[0]);  // -1 because months are from 0 to 11
+        // var to = new Date(d2[2], parseInt(d2[1]) - 1, d2[0]);
+        // var check = new Date(c[2], parseInt(c[1]) - 1, c[0]);
 
-        var from = new Date(d1[2], parseInt(d1[1]) - 1, d1[0]);  // -1 because months are from 0 to 11
-        var to = new Date(d2[2], parseInt(d2[1]) - 1, d2[0]);
-        var check = new Date(c[2], parseInt(c[1]) - 1, c[0]);
-        if (check > from && check < to) {
+
+        if (dateFrom < dateCheck && dateCheck < dateTo) {
             return {
                 "IsInBetween": true
             }

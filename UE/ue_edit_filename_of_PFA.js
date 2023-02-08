@@ -31,7 +31,7 @@ define(['N/search', "N/record", "N/file"], function (search, record, file) {
             var fileObj = file.load({
                 id: fileRecordID
             });
-            
+
             // fileObj.name = 'myOldImageFile.jpg';
             log.debug("fileObj.name : ", fileObj.name);
             let updatedName = `${code} - ${fileObj.name}`;
@@ -54,3 +54,4 @@ define(['N/search', "N/record", "N/file"], function (search, record, file) {
         afterSubmit,
     }
 });
+
