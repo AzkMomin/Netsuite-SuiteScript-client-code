@@ -5,7 +5,7 @@
 
 define(['N/search', "N/record", "N/format"], function (search, record, format) {
     const beforeSubmit = (context) => {
-        if (context.type != 'view' ) {
+        if (context.type == 'create' || context.type == 'edit' || context.type == 'ship' ) {
             try {
                 let newRec = context.newRecord;
                 let status = newRec.getValue({ fieldId: "shipstatus" });
