@@ -90,7 +90,7 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
             catch (e) {
                 log.debug("Error : ", e)
             }
-        }
+        } 
 
     }
 

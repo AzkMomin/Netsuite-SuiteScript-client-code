@@ -18,21 +18,26 @@ define(['N/record', 'N/search'],
                         fieldId: "item",
                         line: i
                     });
-
-                    if (serviceItemID != "") {
+                    var visionXCode = context.newRecord.getSublistValue({
+                        sublistId: "timeitem",
+                        fieldId: "cseg_paactivitycode_2",
+                        line: i
+                    });
+                    log.debug("visionXCode : ", visionXCode);
+                    if (serviceItemID != "" && visionXCode =="") {
                         log.debug(" field changed  empty ")
                         var serviceItem = record.load({
                             type: "serviceitem",
                             id: serviceItemID
                         })
 
-                        var visionXCode = serviceItem.getValue({ fieldId: "custitem_eoh_visionx_code" });
-                        log.debug("visionXCode : ", visionXCode);
+                        var visionXCodeValue = serviceItem.getValue({ fieldId: "custitem_eoh_visionx_code" });
+                        log.debug("visionXCodeValue : ", visionXCodeValue);
                         timeSheetRec.setSublistValue({
                             sublistId: "timeitem",
                             fieldId: "cseg_paactivitycode_2",
                             line: i,
-                            value: visionXCode
+                            value: visionXCodeValue
                         });
                     }
                 }

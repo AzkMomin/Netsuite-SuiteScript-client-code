@@ -73,6 +73,29 @@ var inboundData = [
     {
         "Customer ID": "MCB",
         "ORDER TYPE": "ECOM",
+        BATCH: "8374392",
+        "Order ID": "2301311357020111",
+        "3rd Party PO": "",
+        "Shipping Method": "UPS Ground (AV)",
+        "Ship Company": "Variedades En Estilo LLC",
+        ShipEmail: "VariedadesEnEstilo@gmail.com",
+        "Ship Phone Number": "(571) 464-2091 JOSE (SON)",
+        "Ship Address 1": "8452 Centreville Road",
+        "Ship Address 2": "",
+        "Ship City": "Manassas",
+        "Ship State/Province": "VA",
+        "Ship PostalCode": "20111",
+        "Ship Country": "US",
+        "Product Part Number": "PR12263-Y07-4",
+        Description: "PRINCESA",
+        "Product Quantity": "1",
+        "Tracking Number": "",
+        Amount: ".00",
+        Shipping: ""
+    },
+    {
+        "Customer ID": "MCB",
+        "ORDER TYPE": "ECOM",
         BATCH: "8374389",
         "Order ID": "2301311368679104",
         "3rd Party PO": "",
@@ -93,30 +116,6 @@ var inboundData = [
         Amount: ".00",
         Shipping: ""
     },
-
-    {
-        "Customer ID": "MCB",
-        "ORDER TYPE": "ECOM",
-        BATCH: "8374392",
-        "Order ID": "2301311357020111",
-        "3rd Party PO": "",
-        "Shipping Method": "UPS Ground (AV)",
-        "Ship Company": "Variedades En Estilo LLC",
-        ShipEmail: "VariedadesEnEstilo@gmail.com",
-        "Ship Phone Number": "(571) 464-2091 JOSE (SON)",
-        "Ship Address 1": "8452 Centreville Road",
-        "Ship Address 2": "",
-        "Ship City": "Manassas",
-        "Ship State/Province": "VA",
-        "Ship PostalCode": "20111",
-        "Ship Country": "US",
-        "Product Part Number": "PR12263-Y07-4",
-        Description: "PRINCESA",
-        "Product Quantity": "1",
-        "Tracking Number": "",
-        Amount: ".00",
-        Shipping: ""
-    }
 ]
 
 var totalInboundRecords = [];
@@ -140,7 +139,6 @@ if (inboundData.length > 0) {
                     }
                 }
                 if (notFound) {
-
                     orderIdRecords.push({
                         key: orderId,
                         value: String(i)

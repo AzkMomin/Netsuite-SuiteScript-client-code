@@ -131,7 +131,7 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                                 fieldId: "amount",
                                 line: i
                             });
-                            
+
                             const lpRedeemed = newRec.getSublistValue({
                                 sublistId: 'item',
                                 fieldId: "custcol_lps_redeemed",
@@ -153,7 +153,7 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                             }
                         }
                         if ((totalRedeem) * -1 > finalAmt) {
-                            totalRedeem = parseInt(finalAmt);
+                            totalRedeem = (parseInt(finalAmt) * -1);
                         }
                         log.debug("totalRedeem : ", totalRedeem);
                         log.debug("finalAmt : ", finalAmt);
@@ -179,7 +179,7 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                         });
                         let finalLP_Balance = parseFloat(LP_Fields.custrecord_lp_balance) + (parseFloat(totalRedeem));
                         // LP balance gets negative after deduction on inv then it will become 0
-                        if(finalLP_Balance < 0){
+                        if (finalLP_Balance < 0) {
                             finalLP_Balance = 0;
                         }
                         log.debug("LP Record Final Balance remain after deduction  : ", finalLP_Balance);
@@ -201,6 +201,29 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                 }
             } catch (e) {
                 log.debug("error : ", e)
+            }
+        } else if (context.type == "delete") {
+            const newRec = context.newRecord;
+            let LP_Adjusted_redeemed = newRec.getValue({ fieldId: "custbody_lps_adjusted_redeemed" });
+            if (LP_Adjusted_redeemed) {
+                let LP_RecId = newRec.getValue({ fieldId: "custbody_lp_record_reference" });
+                let LP_Adjusted = newRec.getValue({ fieldId: "custbody_lp_awarded" });
+                var LP_Fields = search.lookupFields({
+                    type: 'customrecord_loyalty_points',
+                    id: LP_RecId,
+                    columns: ['custrecord_lp_balance']
+                });
+
+                let LpPointsafterAddition = parseFloat(LP_Fields.custrecord_lp_balance) - (parseFloat(LP_Adjusted))
+                log.debug("Loyalty Point After Addition : ", LpPointsafterAddition);
+                var poinintsAdjustedLpRec = record.submitFields({
+                    type: 'customrecord_loyalty_points',
+                    id: LP_RecId,
+                    values: {
+                        'custrecord_lp_balance': LpPointsafterAddition
+                    }
+                });
+                log.debug("Loyalty Point Rec Adjusted After Addition  ID : ", poinintsAdjustedLpRec);
             }
         }
     }
