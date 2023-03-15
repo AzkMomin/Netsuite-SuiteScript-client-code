@@ -15,15 +15,15 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                 if (context.type == 'edit') {
                     let oldRec = context.oldRecord;
                     let oldtranDate = oldRec.getValue({ fieldId: "trandate" });
-                    log.debug('tranDate : ', tranDate)
-                    log.debug('oldtranDate : ', oldtranDate)
+                    // log.debug('tranDate : ', tranDate)
+                    // log.debug('oldtranDate : ', oldtranDate)
                     if (String(oldtranDate) === String(tranDate)) {
                         log.debug(' Old And new Dates are not equal ')
                         checkForDates = false
                     }
                 }
                 //If old trandate == new trandate on edit then dont check further
-                if (checkForDates) {
+                // if (checkForDates) {
                     var customerFields = search.lookupFields({
                         type: 'customer',
                         id: customerID,
@@ -33,9 +33,10 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                     var LPFields = search.lookupFields({
                         type: 'customrecord_loyalty_points',
                         id: customerFields.custentity_lp_reference[0].value,
-                        columns: ['custrecord_lp_startdate', 'custrecord_lp_expirydate',"custrecord_lp_balance"]
+                        columns: ['custrecord_lp_startdate', 'custrecord_lp_expirydate', "custrecord_lp_balance"]
                     });
 
+                    var checkForElegible = false;
                     const SoLineCount = newRec.getLineCount({ sublistId: "item" });
                     for (let i = 0; i < SoLineCount; i++) {
                         let itemId = newRec.getSublistValue({
@@ -43,14 +44,28 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                             fieldId: "item",
                             line: i
                         });
-
+                        let rate = newRec.getSublistValue({
+                            sublistId: 'item',
+                            fieldId: "rate",
+                            line: i
+                        });
+                        let qty = newRec.getSublistValue({
+                            sublistId: 'item',
+                            fieldId: "quantity",
+                            line: i
+                        });
+                        var estLp = rate * qty
+                        log.debug('estLp : ', estLp)
                         var invantoryItemFields = search.lookupFields({
                             type: 'inventoryitem',
                             id: itemId,
                             columns: ['custitem_lps_redeemable_per_unit']
                         });
                         newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_redemption_rate", line: i, value: invantoryItemFields.custitem_lps_redeemable_per_unit })
-
+                        newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_est_lp_point_added", line: i, value: estLp })
+                        if (invantoryItemFields.custitem_lps_redeemable_per_unit != "") {
+                            checkForElegible = true
+                        }
                     }
                     let member = getMember(customerID);
                     log.debug('member : ', member)
@@ -58,11 +73,17 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                     // LP reference is not present but fall between LP dates
                     let betweenDate = IsfallInMembershipDate(tranDate, member.startDate, member.expireDate);
                     let betweenLpExpireDate = IsfallInMembershipDate(tranDate, LPFields.custrecord_lp_startdate, LPFields.custrecord_lp_expirydate);
-                    log.debug('betweenDate : ', betweenDate)
-                    log.debug('betweenLpExpireDate : ', betweenLpExpireDate)
-                    if (betweenDate.IsInBetween && member.LP_Balance == 0) {
-                        log.debug('Eligible for LPs because trandate falls between membership date : ')
-                        newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true });
+                    log.debug('betweenDate : ', betweenDate);
+                    log.debug('betweenLpExpireDate : ', betweenLpExpireDate);
+
+                    // var EligibleForLp = newRec.getValue({ fieldId: "custbody_is_eligible_for_lps" });
+                    // var paymentMethLp = newRec.getValue({ fieldId: "custbody_pay_meth_is_lp" });
+
+                    if (betweenLpExpireDate.IsInBetween && member.LP_Balance != 0 && checkForElegible) {
+                        log.debug('Eligible for LPs because trandate falls between lp dates date : ')
+                    
+                        newRec.setValue({ fieldId: 'custbody_pay_meth_is_lp', value: true });
+                        newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: false });
                         if (!customerFields.custentity_lp_reference) {
                             // LP reference is not present but fall between LP dates
                             const LP_RecId = createLoyaltyPointRec(customerID, member.startDate);
@@ -75,30 +96,28 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
                             });
                             log.debug("Successfully set reference of newly created LP record : ID : ", customerSaveID);
                         }
-                    } else if (betweenLpExpireDate.IsInBetween && betweenLpExpireDate.LP_Balance != 0) {
-                        if (context.type == 'create') {
-                            log.debug('Payment Method is LP')
-                            newRec.setValue({ fieldId: 'custbody_pay_meth_is_lp', value: true });
-                        }
-                    }
-                    if (betweenDate.IsInBetween == false) {
-                        newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: false });
+                    } else if (betweenDate.IsInBetween) { //&& betweenLpExpireDate.LP_Balance != 0
+                        log.debug('Payment Method is LP')
+                        newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true });
+                        newRec.setValue({ fieldId: 'custbody_pay_meth_is_lp', value: false });
+
                     }
 
-                }
+
+                // }
             }
             catch (e) {
                 log.debug("Error : ", e)
             }
-        } 
+        }
 
     }
 
 
     const IsfallInMembershipDate = (tranDate, startDate, expireDate) => {
         let formatedtranDate = getFormatedDate(tranDate);
-        log.debug('tranDate : ', tranDate)
-        log.debug('formatedtranDate : ', formatedtranDate)
+        // log.debug('tranDate : ', tranDate)
+        // log.debug('formatedtranDate : ', formatedtranDate)
 
         return dateIsINBetween(formatedtranDate, startDate, expireDate)
     }
@@ -120,8 +139,8 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
         var dateFrom = new Date(StartDate);
         var dateTo = new Date(ExpireDate);
         var dateCheck = new Date(trandate);
-        log.debug("StartDate : ", StartDate)
-        log.debug("ExpireDate : ", ExpireDate)
+        // log.debug("StartDate : ", StartDate)
+        // log.debug("ExpireDate : ", ExpireDate)
         // var d1 = dateFrom.split("/");
         // var d2 = dateTo.split("/");
         // var c = dateCheck.split("/");

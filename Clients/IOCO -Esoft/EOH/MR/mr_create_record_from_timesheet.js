@@ -48,16 +48,17 @@ define([
             iterator.each(() => { return false; });
             var i = 0;
             iterator.each((line) => {
-                var lineValues = line.value.split(";");
+                var lineValues = line.value.split(",");
                 rec.push({
                     "customForm": lineValues[0],
                     "weekof": lineValues[1],
                     "date": lineValues[2],
                     "employee": lineValues[3],
                     "customerProject": lineValues[4],
-                    "caseTestEvent": lineValues[5],
-                    "department": lineValues[6],
-                    "location": lineValues[7],
+                    "serviceItem": lineValues[5],
+                    "caseTestEvent": lineValues[6],
+                    "department": lineValues[7],
+                    // "location": lineValues[8],
                     "activityCode": lineValues[8],
                     "visionx": lineValues[9],
                     "hours": lineValues[10],
@@ -71,7 +72,7 @@ define([
             createRecord(rec)
             //Move the file from CSV Files For Processing to CSV Files Processed
             fileObj.folder = 3007
-            var fileid = fileObj.save();
+            // var fileid = fileObj.save();
         }
 
         catch (e) {
@@ -99,38 +100,54 @@ define([
         var project = rec[0].customerProject
         var empId = getEmpId(employee);
         var projectId = getProjectId(project);
+        var serviceItem = getServiceItemId(rec[0].serviceItem);
 
         log.debug("empId : ", empId);
         log.debug("projectId : ", projectId);
+        log.debug("serviceItem : ", serviceItem);
 
         timeSheetRec.setValue({ fieldId: 'customform', value: rec[0].customForm })
         timeSheetRec.setValue({ fieldId: 'trandate', value: parseDate })
         timeSheetRec.setValue({ fieldId: 'employee', value: empId })
 
-        var location = getlocation(rec[0].location)
-        var department = getdepartment(rec[0].department)
+        // if (rec[0].location != "") {
+        //     var location = getlocation(rec[0].location)
+        // } else {
+        //     var location = ""
+        // }
+        // if (rec[0].location != "") {
+
+        //     var department = getdepartment(rec[0].department)
+        // } else {
+        //     var department = ""
+        // }
         var activityCode = getactivityCode(rec[0].activityCode)
-        // var visionx = getvisionx(rec[0].visionx)
-        log.debug("location : ", location);
-        log.debug("department : ", department);
+        // // var visionx = getvisionx(rec[0].visionx)
+        // log.debug("location : ", location);
+        // log.debug("department : ", department);
         log.debug("activityCode : ", activityCode);
         // log.debug("visionx : ", visionx);
 
 
-        var hrs = getHours(rec)
-        log.debug("hrs : ", hrs);
-        var i = 0;
-        Object.keys(hrs).forEach(key => {
-            timeSheetRec.selectNewLine({ sublistId: 'timeitem' });
-            timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "customer", value: projectId })
-            timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: key, value: hrs[key] })
-            timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "location", value: location })
-            // timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "department", value: department })
-            timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "cseg_paactivitycode", value: activityCode })
-            // timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "cseg_paactivitycode_2", value: visionx })
-            timeSheetRec.commitLine({ sublistId: 'timeitem' });
-            i++
-        });
+        var hours = getHours(rec)
+        log.debug("hrs : ", hours);
+
+
+
+        timeSheetRec.selectNewLine({ sublistId: 'timeitem' });
+        timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "customer", value: projectId })
+
+        // timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "location", value: location })
+        // timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "department", value: department })
+        // timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "cseg_paactivitycode", value: activityCode })
+        timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "item", value: serviceItem.ID })
+        // timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: "cseg_paactivitycode_2", value: visionx })
+        for (let key in hours) {
+
+            timeSheetRec.setCurrentSublistValue({ sublistId: 'timeitem', fieldId: key, value: hours[key] })
+        };
+        timeSheetRec.commitLine({ sublistId: 'timeitem' });
+
 
 
         var timeSheetSavedRec = timeSheetRec.save();
@@ -275,7 +292,7 @@ define([
             const date2 = new Date(element.date);
             const diffTime = Math.abs(date2 - date1);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          
+
             if (parseInt(diffDays) == 1) {
                 dateHours.hours1 = element.hours
             }
@@ -298,6 +315,37 @@ define([
         });
 
         return dateHours;
+    }
+    function getServiceItemId(serviceItem) {
+        var obj;
+        const itemSearchColInternalId = search.createColumn({ name: 'internalid' });
+        const itemSearchColName = search.createColumn({ name: 'itemid', sort: search.Sort.ASC });
+        const itemSearch = search.create({
+            type: 'item',
+            filters: [
+                ['name', 'is', serviceItem],
+            ],
+            columns: [
+                itemSearchColInternalId,
+                itemSearchColName,
+            ],
+        });
+        // Note: Search.run() is limited to 4,000 results
+        // itemSearch.run().each((result: search.Result): boolean => {
+        //   return true;
+        // });
+        const itemSearchPagedData = itemSearch.runPaged({ pageSize: 1000 });
+        for (let i = 0; i < itemSearchPagedData.pageRanges.length; i++) {
+            const itemSearchPage = itemSearchPagedData.fetch({ index: i });
+            itemSearchPage.data.forEach((result) => {
+                const internalId = result.getValue(itemSearchColInternalId);
+                const name = result.getValue(itemSearchColName);
+                obj = {
+                    ID: internalId
+                }
+            });
+        }
+        return obj;
     }
     return {
         getInputData: getInputData,

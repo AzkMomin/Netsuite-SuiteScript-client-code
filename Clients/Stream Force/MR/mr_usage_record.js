@@ -58,7 +58,6 @@ define([
             var usageRec = record.create({
                 type: 'usage',
             })
-
             usageRec.setValue({
                 fieldId: "customer",
                 value: customer,

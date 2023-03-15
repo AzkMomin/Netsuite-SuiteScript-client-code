@@ -26,7 +26,7 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                             columns: ['custrecord_lp_balance']
                         });
 
-                        let LpPointsafterAddition = parseFloat(LP_Fields.custrecord_lp_balance) - (parseFloat(LP_Adjusted))
+                        let LpPointsafterAddition = parseFloat(LP_Fields.custrecord_lp_balance) + (parseFloat(LP_Adjusted))
                         log.debug("Loyalty Point After Addition : ", LpPointsafterAddition);
                         var poinintsAdjustedLpRec = record.submitFields({
                             type: 'customrecord_loyalty_points',
@@ -44,17 +44,18 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                     id: SO_ID,
                     columns: ['custbody_pay_meth_is_lp']
                 });
-                log.debug("So_Fields.custbody_pay_meth_is_lp : ", So_Fields.custbody_pay_meth_is_lp)
+                // log.debug("So_Fields.custbody_pay_meth_is_lp : ", So_Fields.custbody_pay_meth_is_lp)
                 var customerFields = search.lookupFields({
                     type: 'customer',
                     id: customerID,
                     columns: ['custentity_lp_balance', "custentity_lp_reference"]
                 });
-                log.debug("LP balance : ", customerFields.custentity_lp_balance)
-                log.debug("Payment Done form loyalty point : ", So_Fields.custbody_pay_meth_is_lp);
+                // log.debug("LP balance : ", customerFields.custentity_lp_balance)
+                // log.debug("Payment Done form loyalty point : ", So_Fields.custbody_pay_meth_is_lp);
                 if (So_Fields.custbody_pay_meth_is_lp) {
-                    var LP_Balance = customerFields.custentity_lp_balance;
-                    // var showAlert = false;
+                    var LP_Balance_wallet = customerFields.custentity_lp_balance;
+                    let tempLpBalance = LP_Balance_wallet;
+                    var negLineAmt = 0;
                     if (!customerFields.custentity_lp_balance) {
 
                     } else {
@@ -67,70 +68,60 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                                 line: i
                             });
 
+                            const rate = newRec.getSublistValue({
+                                sublistId: 'item',
+                                fieldId: "rate",
+                                line: i
+                            });
+
                             const SORecord = record.load({
                                 type: "salesorder",
                                 id: SO_ID,
                             });
-                            const SO_LineCount = SORecord.getLineCount({ sublistId: "item" });
+                            var lineNumber = SORecord.findSublistLineWithValue({
+                                sublistId: 'item',
+                                fieldId: 'item',
+                                value: invItemId
+                            });
 
-                            for (let s = 0; s < SO_LineCount; s++) {
-                                let SOitemId = newRec.getSublistValue({
+
+                            if (lineNumber != -1 && invItemId != 24840) {
+                                let redeemRate = SORecord.getSublistValue({
                                     sublistId: 'item',
-                                    fieldId: "item",
-                                    line: s
+                                    fieldId: "custcol_redemption_rate",
+                                    line: lineNumber
                                 });
+                                const qty = newRec.getSublistValue({
+                                    sublistId: 'item',
+                                    fieldId: "quantity",
+                                    line: i
+                                });
+                                log.debug("redeemRate : ", redeemRate);
+                                log.debug("qty : ", qty);
 
-                                if (invItemId == SOitemId) {
-                                    let redeemRate = newRec.getSublistValue({
-                                        sublistId: 'item',
-                                        fieldId: "custcol_redemption_rate",
-                                        line: s
-                                    });
 
-                                    const qty = newRec.getSublistValue({
-                                        sublistId: 'item',
-                                        fieldId: "quantity",
-                                        line: i
-                                    });
-                                    var lp_RedeemAble = qty * redeemRate;
-                                    // log.debug("lp_RedeemAble : ", lp_RedeemAble);
-                                    let tempLpBalance = LP_Balance;
-                                    // log.debug("tempLpBalance : ", tempLpBalance);
-                                    tempLpBalance -= lp_RedeemAble;
-                                    // if (LP_Balance <= 0 && isAlerted == false) {
-                                    //     showAlert = true
-                                    // }
+                                var lp_to_be_redeemed = qty * redeemRate;
+                                log.debug("lp_to_be_redeemed : ", lp_to_be_redeemed);
+                                var lp_RedeemAble = min(tempLpBalance, lp_to_be_redeemed);
+                                log.debug("lp_RedeemAble : ", lp_RedeemAble);
 
-                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_redemption_rate", line: i, value: redeemRate });
-                                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lp_redeemable", line: i, value: lp_RedeemAble });
-                                    if (tempLpBalance >= 0 && LP_Balance > 0) {// LP balance contains some balance
+                                newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lp_redeemable", line: i, value: lp_to_be_redeemed });
+                                newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: i, value: lp_RedeemAble });
+                                newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_redemption_rate", line: i, value: redeemRate });
 
-                                        newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: i, value: (lp_RedeemAble) * -1 });
-                                        LP_Balance -= lp_RedeemAble;
-                                    } else if (tempLpBalance <= 0 && LP_Balance > 0) {//LP balance contains some balance but after deduction it would be -ve
-                                        newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: i, value: (LP_Balance) * -1 });
-                                        LP_Balance -= lp_RedeemAble;
+                                tempLpBalance -= lp_RedeemAble;
+                                log.debug("LP balance remain in wallet : ", tempLpBalance);
 
-                                        // showAlert = true
-                                    } else {
-                                        newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: i, value: 0 });
-                                        log.debug("LP_Balance : ", LP_Balance);
-                                        // showAlert = true
-                                    }
-                                }
+                                // Adding all amounts for negative line
+                                negLineAmt += ((rate / redeemRate) * lp_to_be_redeemed);
+
                             }
+
                         }
 
                         var totalRedeem = 0;
-                        var finalAmt = 0;
-                        var ExistingLine = { update: false };
 
                         for (let i = 0; i < invLineCount; i++) {
-                            const amount = newRec.getSublistValue({
-                                sublistId: 'item',
-                                fieldId: "amount",
-                                line: i
-                            });
 
                             const lpRedeemed = newRec.getSublistValue({
                                 sublistId: 'item',
@@ -142,42 +133,42 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                                 fieldId: "item",
                                 line: i
                             });
-                            if (itemId != "24838") {
-                                finalAmt += amount;
+                            if (itemId != "24840") {
                                 totalRedeem += lpRedeemed;
-                            } else {
-                                ExistingLine = {
-                                    update: true,
-                                    line: i
-                                }
                             }
                         }
-                        if ((totalRedeem) * -1 > finalAmt) {
-                            totalRedeem = (parseInt(finalAmt) * -1);
-                        }
+                        // if ((totalRedeem) * -1 > finalAmt) {
+                        //     totalRedeem = (parseInt(finalAmt) * -1);
+                        // }
                         log.debug("totalRedeem : ", totalRedeem);
-                        log.debug("finalAmt : ", finalAmt);
-                        log.debug("ExistingLine : ", ExistingLine);
+                        log.debug("Negative amount to be added : ", negLineAmt);
                         log.debug("LP Reference ID : ", customerFields.custentity_lp_reference[0].value);
+                        var lineValue;
+                        var LP_discount_line_Number = newRec.findSublistLineWithValue({
+                            sublistId: 'item',
+                            fieldId: 'item',
+                            value: 24840
+                        });
+                        log.debug("totalRedeem : ", totalRedeem);
 
-                        if (ExistingLine.update) {
-                            newRec.setSublistValue({ sublistId: "item", fieldId: "item", line: ExistingLine.line, value: 24838 });
-                            newRec.setSublistValue({ sublistId: "item", fieldId: "rate", line: ExistingLine.line, value: (totalRedeem) * -1 });
-                            newRec.setSublistValue({ sublistId: "item", fieldId: "amount", line: ExistingLine.line, value: (totalRedeem) * -1 });
-                            newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: ExistingLine.line, value: (totalRedeem) * -1 });
+                        if (LP_discount_line_Number != -1) {
+                            lineValue = LP_discount_line_Number
                         } else {
-                            newRec.setSublistValue({ sublistId: "item", fieldId: "item", line: invLineCount, value: 24838 });
-                            newRec.setSublistValue({ sublistId: "item", fieldId: "rate", line: invLineCount, value: (totalRedeem) * -1 });
-                            newRec.setSublistValue({ sublistId: "item", fieldId: "amount", line: invLineCount, value: (totalRedeem) * -1 });
-                            newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: invLineCount, value: (totalRedeem) * -1 });
+                            lineValue = invLineCount
                         }
+
+                        newRec.setSublistValue({ sublistId: "item", fieldId: "item", line: lineValue, value: 24840 });
+                        newRec.setSublistValue({ sublistId: "item", fieldId: "rate", line: lineValue, value: (negLineAmt) * -1 });
+                        newRec.setSublistValue({ sublistId: "item", fieldId: "amount", line: lineValue, value: (negLineAmt) * -1 });
+                        newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_lps_redeemed", line: lineValue, value: (totalRedeem) * -1 });
+
 
                         var LP_Fields = search.lookupFields({
                             type: 'customrecord_loyalty_points',
                             id: customerFields.custentity_lp_reference[0].value,
                             columns: ['custrecord_lp_balance']
                         });
-                        let finalLP_Balance = parseFloat(LP_Fields.custrecord_lp_balance) + (parseFloat(totalRedeem));
+                        let finalLP_Balance = parseFloat(LP_Fields.custrecord_lp_balance) + (parseFloat((totalRedeem) *-1));
                         // LP balance gets negative after deduction on inv then it will become 0
                         if (finalLP_Balance < 0) {
                             finalLP_Balance = 0;
@@ -191,7 +182,7 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                             }
                         });
 
-                        newRec.setValue({ fieldId: 'custbody_lp_awarded', value: totalRedeem });
+                        newRec.setValue({ fieldId: 'custbody_lp_awarded', value: (totalRedeem) *-1 });
                         newRec.setValue({ fieldId: 'custbody_lp_record_reference', value: LP_RecId });
                         newRec.setValue({ fieldId: "custbody_lps_adjusted_redeemed", value: true })
                         log.debug("LP Record Balance Updated with id  : ", LP_RecId);
@@ -227,7 +218,15 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
             }
         }
     }
-
+    function min(LP_Balance, redeemed) {
+        var redeemable
+        if (LP_Balance >= redeemed) {
+            redeemable = redeemed
+        } else {
+            redeemable = LP_Balance
+        }
+        return redeemable;
+    }
 
     return {
         beforeSubmit,
