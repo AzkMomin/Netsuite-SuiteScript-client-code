@@ -9,8 +9,10 @@ define([
 
   const getInputData = () => {
     var transactionSearch = search.load({
-      id: 'customsearch2737'
+      id: 'customsearch2977'
     })
+
+
     return transactionSearch
   }
 
@@ -28,19 +30,21 @@ define([
         JE_ID: commJE_RecResult.values["GROUP(internalid)"].value,
         creditAmt: commJE_RecResult.values["AVG(formulacurrency)"],
         commTypeSplit: commJE_RecResult.values["GROUP(custbody_split_commissions.CUSTBODY_AMZ_INVOICE_NUM)"],
+        date: commJE_RecResult.values["GROUP(trandate)"]
       }
     });
 
-    
+
   }
   const reduce = (context) => {
     var partnerID = context.key
+    log.debug('partnerID : ',partnerID)
     var records = context.values
 
     var commAmount = 0;
     var linkApplyToCommJE = []
     var linkApplyToInv = []
-
+    var date;
     // log.debug("salesrepId ", salesrepId)
     // log.debug("records ", records)
     records.forEach((result) => {
@@ -51,15 +55,18 @@ define([
         invId: resultObj.invId,
         isSplitComm: resultObj.commTypeSplit
       });
-
+      date = resultObj.date
     })
 
     commAmount = commAmount.toFixed(2)
     log.debug('commAmount : ', commAmount)
+    log.debug('date : ', date)
     // log.debug('linkApplyToCommJE : ', linkApplyToCommJE)
 
     var partnerAccumulatedComm = getPartnerAccumulatedComm(partnerID);
+    log.debug('partnerAccumulatedComm : ', partnerAccumulatedComm)
     var prevPartnerRec = getPreviousPartnerRecord(partnerID)
+    log.debug('prevPartnerRec : ', prevPartnerRec)
 
     const person = {
       id: partnerID,
@@ -68,6 +75,7 @@ define([
       invId: linkApplyToInv,
       accuCommObj: partnerAccumulatedComm,
       prevRec: prevPartnerRec,
+      date: date
     }
     log.debug("person ", person)
     const commRec = createCommRecord(person);
@@ -94,16 +102,16 @@ define([
 
       var partner_salesrep = "custrecord_amz_dfs_com_partner";
 
-      var todysDate = new Date();
-      var month = todysDate.getMonth() + 1;
-      // log.debug("Current Month Number : ", month);
+      var date = new Date(person.date);
+      var month = date.getMonth() + 1;
+      log.debug("Current Month Number : ", month);
       //Setting partner or emp field
       commRec.setValue({ fieldId: partner_salesrep, value: person.id });
       //setting month date means script will run on month date i.e todays date
       commRec.setValue({
         fieldId: "custrecord_amz_dfs_com_date",
         value: format.parse({
-          value: todysDate,
+          value: date,
           type: format.Type.DATE
         })
       });
@@ -242,7 +250,8 @@ define([
     });
 
     const customrecord_commissionsSearchPagedData = customrecord_commissionsSearch.runPaged({ pageSize: 1000 });
-    if (customrecord_commissionsSearchPagedData.pageRanges.length !== 0) {
+
+    if (customrecord_commissionsSearchPagedData.pageRanges.length != 0) {
       for (let i = 0; i < customrecord_commissionsSearchPagedData.pageRanges.length; i++) {
         const customrecord_commissionsSearchPage = customrecord_commissionsSearchPagedData.fetch({ index: i });
         customrecord_commissionsSearchPage.data.forEach((result) => {
@@ -267,9 +276,9 @@ define([
   }
   const getPreviousPartnerRecord = (partnerId) => {
     var found;
-    const customrecord_commissionsSearchColId = search.createColumn({ name: 'id', sort: search.Sort.ASC });
-    const customrecord_commissionsSearchColScriptId = search.createColumn({ name: 'scriptid' });
-    const customrecord_commissionsSearch = search.create({
+    const customrecord921SearchColScriptId = search.createColumn({ name: 'scriptid', sort: search.Sort.ASC });
+    const customrecord921SearchColInternalId = search.createColumn({ name: 'internalid' });
+    const customrecord921Search = search.create({
       type: 'customrecord921',
       filters: [
         ['custrecord_amz_dfs_com_date', 'within', 'thismonth'],
@@ -277,21 +286,22 @@ define([
         ['custrecord_amz_dfs_com_partner', 'anyof', String(partnerId)],
       ],
       columns: [
-        customrecord_commissionsSearchColId,
-        customrecord_commissionsSearchColScriptId,
+        customrecord921SearchColScriptId,
+        customrecord921SearchColInternalId,
       ],
     });
     // Note: Search.run() is limited to 4,000 results
     // customrecord_commissionsSearch.run().each((result: search.Result): boolean => {
     //   return true;
     // });
-    const customrecord_commissionsSearchPagedData = customrecord_commissionsSearch.runPaged({ pageSize: 1000 });
+    const customrecord_commissionsSearchPagedData = customrecord921Search.runPaged({ pageSize: 1000 });
+    log.debug("customrecord_commissionsSearchPagedData.pageRanges.length", customrecord_commissionsSearchPagedData.pageRanges.length)
     if (customrecord_commissionsSearchPagedData.pageRanges.length != 0) {
       for (let i = 0; i < customrecord_commissionsSearchPagedData.pageRanges.length; i++) {
         const customrecord_commissionsSearchPage = customrecord_commissionsSearchPagedData.fetch({ index: i });
         customrecord_commissionsSearchPage.data.forEach((result) => {
-          const id = result.getValue(customrecord_commissionsSearchColId);
-          const scriptId = result.getValue(customrecord_commissionsSearchColScriptId);
+          const id = result.getValue(customrecord921SearchColInternalId);
+          const scriptId = result.getValue(customrecord921SearchColScriptId);
 
           found = {
             isFound: true,

@@ -51,7 +51,7 @@ define(['N/search', 'N/ui/dialog'], function (search, dialog) {
                     });
                     // if (custFields.custentity33) {
 
-                    commissionToBeApplied = parseFloat((partnerId.custentity_amz_sales_profit_1).toString().split('.'))
+                    commissionToBeApplied = parseFloat((partnerFields.custentity_amz_sales_profit_1).toString().split('.'))
                     // } 
                     // else {
                     //     commissionToBeApplied = parseFloat((custFields.custentity32).toString().split('.'))
@@ -152,10 +152,16 @@ define(['N/search', 'N/ui/dialog'], function (search, dialog) {
 
                     }
 
+                    if (subtotal_commission < 0) {
+                        subtotal_commission = 0
+                    }
                     log.debug("subtotal comission : ", subtotal_commission)
+
                     var final_Commission = subtotal_commission;
                     var adj_commission = newRec.getValue({ fieldId: "custbodycom_adjust" })
-
+                    if (final_Commission < 0) {
+                        final_Commission = 0
+                    }
                     log.debug("adj_commission : ", adj_commission)
                     if (adj_commission != "") {
                         final_Commission = (final_Commission + (adj_commission));
@@ -212,7 +218,7 @@ define(['N/search', 'N/ui/dialog'], function (search, dialog) {
                         }
 
                     };
-                    if(splitComm == "3"){
+                    if (splitComm == "3") {
 
                         newRec.setValue({ fieldId: "custbody_lsk_split_comm_rate", value: commissionToBeApplied });
                     }

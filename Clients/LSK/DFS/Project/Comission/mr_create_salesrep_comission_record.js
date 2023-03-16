@@ -9,8 +9,9 @@ define([
 
   const getInputData = () => {
     var transactionSearch = search.load({
-      id: 'customsearch2735'
+      id: 'customsearch2976'
     })
+
     return transactionSearch
   }
 
@@ -26,6 +27,7 @@ define([
         JE_ID: commJE_RecResult.values["GROUP(internalid)"].value,
         creditAmt: commJE_RecResult.values["AVG(formulacurrency)"],
         commTypeSplit: commJE_RecResult.values["GROUP(custbody_split_commissions.CUSTBODY_AMZ_INVOICE_NUM)"],
+        date : commJE_RecResult.values["GROUP(trandate)"]
       }
     });
   }
@@ -36,7 +38,7 @@ define([
     var commAmount = 0;
     var linkApplyToCommJE = []
     var linkApplyToInv = []
-
+    var date;
     // log.debug("salesrepId ", salesrepId)
     // log.debug("records ", records)
     records.forEach((result) => {
@@ -45,8 +47,9 @@ define([
       linkApplyToCommJE.push(resultObj.JE_ID);
       linkApplyToInv.push({
         invId: resultObj.invId,
-        isSplitComm: resultObj.commTypeSplit
+        isSplitComm: resultObj.commTypeSplit,
       });
+      date = resultObj.date
 
     })
 
@@ -64,6 +67,7 @@ define([
       invId: linkApplyToInv,
       accuCommObj: salesrepAccumulatedComm,
       prevRec: prevSalesRepRec,
+      date : date
     }
     log.debug("person ", person)
     const commRec = createCommRecord(person);
@@ -90,7 +94,7 @@ define([
 
       var partner_salesrep = "custrecord_amz_dfs_com_emp";
 
-      var todysDate = new Date();
+      var todysDate = new Date(person.date);
       var month = todysDate.getMonth() + 1;
       // log.debug("Current Month Number : ", month);
       //Setting partner or emp field

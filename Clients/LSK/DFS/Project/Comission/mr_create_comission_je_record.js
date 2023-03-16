@@ -8,35 +8,17 @@ define([
 ], function (search, record, format) {
 
   const getInputData = () => {
-    const invoiceSearchColInternalId = search.createColumn({ name: 'internalid' });
-    const invoiceSearchColDocumentNumber = search.createColumn({ name: 'tranid' });
-    const invoiceSearch = search.create({
-      type: 'invoice',
-      filters: [
-        ['type', 'anyof', 'CustInvc'],
-        'AND',
-        ['mainline', 'is', 'T'],
-        'AND',
-        ['status', 'anyof', 'CustInvc:B'],
-        'AND',
-        ['custbody_amz_commission_link', 'anyof', '@NONE@'],
-        'AND',
-        ['internalid', 'anyof', '172059'],
-        'AND',
-        ['trandate', 'onorafter', 'startoflastmonth'],
-      ],
-      columns: [
-        invoiceSearchColInternalId,
-        invoiceSearchColDocumentNumber,
-      ],
-    });
+
+    var invoiceSearch = search.load({
+      id: 'customsearch2974'
+    })
     return invoiceSearch
   }
 
   const map = (context) => {
     var invRecResult = JSON.parse(context.value);
-    log.debug('searchResult : ', invRecResult);
-
+    // log.debug('searchResult : ', invRecResult);
+    log.debug('-------------------------------------- : ');
     var invRec = record.load({
       type: 'invoice',
       id: invRecResult.id
@@ -83,11 +65,11 @@ define([
       value: invRec.getValue('subsidiary'),
       ignoreFieldChange: true
     });
-    commRec.setValue({
-      fieldId: 'custbody_amz_sales_rep',
-      value: invRec.getValue('salesrep'),
-      ignoreFieldChange: true
-    });
+    // commRec.setValue({
+    //   fieldId: 'custbody_amz_sales_rep',
+    //   value: invRec.getValue('salesrep'),
+    //   ignoreFieldChange: true
+    // });
 
     commRec.setValue({
       fieldId: 'location',
@@ -226,12 +208,6 @@ define([
         value: tot
       });
 
-      commRec.setSublistValue({
-        sublistId: 'line',
-        fieldId: 'custcoldfs_tx_sales_rate_je',
-        line: 1,
-        value: split_Persons[i].rate
-      });
 
       commRec.setSublistValue({
         sublistId: 'line',
@@ -243,7 +219,7 @@ define([
       // commRec.setCurrentSublistValue({
       commRec.setSublistValue({
         sublistId: 'line',
-        fieldId: 'custbody_amz_partner',
+        fieldId: 'custcol_lsk_partner_je_line',
         line: 1,
         value: invRec.getValue('partner')
       });
