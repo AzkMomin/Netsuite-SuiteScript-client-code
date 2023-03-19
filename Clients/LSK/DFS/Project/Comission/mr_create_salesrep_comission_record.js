@@ -27,7 +27,7 @@ define([
         JE_ID: commJE_RecResult.values["GROUP(internalid)"].value,
         creditAmt: commJE_RecResult.values["AVG(formulacurrency)"],
         commTypeSplit: commJE_RecResult.values["GROUP(custbody_split_commissions.CUSTBODY_AMZ_INVOICE_NUM)"],
-        date : commJE_RecResult.values["GROUP(trandate)"]
+        date: commJE_RecResult.values["GROUP(trandate)"]
       }
     });
   }
@@ -59,6 +59,7 @@ define([
 
     var salesrepAccumulatedComm = getSalesrepAccumulatedComm(salesrepId);
     var prevSalesRepRec = getPreviousSalesRepRecord(salesrepId)
+    log.debug('salesrepAccumulatedComm : ', salesrepAccumulatedComm)
 
     const person = {
       id: salesrepId,
@@ -67,7 +68,7 @@ define([
       invId: linkApplyToInv,
       accuCommObj: salesrepAccumulatedComm,
       prevRec: prevSalesRepRec,
-      date : date
+      date: date
     }
     log.debug("person ", person)
     const commRec = createCommRecord(person);
@@ -228,11 +229,13 @@ define([
     const customrecord_commissionsSearch = search.create({
       type: 'customrecord921',
       filters: [
-        ['custrecord_amz_dfs_com_date', 'within', 'lastmonth'],
+        // ['custrecord_amz_dfs_com_date', 'within', 'lastmonth'],
+        ['custrecord_lsk_comm_month', 'anyof', '1'],
         'AND',
         ['custrecord_amz_dfs_com_emp', 'anyof', String(salesrepId)],
         'AND',
-        ['custrecord_amz_dfs_com_date', 'within', 'thisfiscalyear'],
+        // ['custrecord_amz_dfs_com_date', 'within', 'thisfiscalyear'],
+        ['custrecord_amz_dfs_com_date', 'within', '11/1/2022', '11/30/2023'],
       ],
       columns: [
         customrecord_commissionsSearchColEmployee,
@@ -273,7 +276,8 @@ define([
     const customrecord921Search = search.create({
       type: 'customrecord921',
       filters: [
-        ['custrecord_amz_dfs_com_date', 'within', 'thismonth'],
+        // ['custrecord_amz_dfs_com_date', 'within', 'thismonth'],
+        ['custrecord_lsk_comm_month', 'anyof', '2'],
         'AND',
         ['custrecord_amz_dfs_com_emp', 'anyof', String(salesrepId)],
       ],

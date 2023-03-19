@@ -239,13 +239,31 @@ define([
 
             }
 
-
-
         }
-        var saveInvCreditMemoRec = newRec.save()
-        log.debug("Commission Calculated on invoice id ", saveInvCreditMemoRec)
 
-        log.debug('------------------------------------ ')
+        try {
+            var saveInvCreditMemoRec = newRec.save()
+            log.debug("Commission Calculated on invoice id ", saveInvCreditMemoRec)
+            var otherId = record.submitFields({
+                type: invCreditMemoRecResult.recordType,
+                id: invCreditMemoRecResult.id,
+                values: {
+                    'custbody_comm_calculated': true
+                }
+            });
+            log.debug('------------------------------------ ')
+        }
+        catch (e) {
+            var otherId = record.submitFields({
+                type: invCreditMemoRecResult.recordType,
+                id: invCreditMemoRecResult.id,
+                values: {
+                    'custbody_comm_calculated': true
+                }
+            });
+            log.debug("e ", e)
+        }
+
     }
     function getAccount(itemId) {
         var itemSearchObj = search.create({

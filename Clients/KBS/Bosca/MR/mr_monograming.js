@@ -80,6 +80,7 @@ define([
             sublistId: 'item',
         })
 
+        var deducted = false
         log.debug('salesOrderLineCount  ', salesOrderLineCount);
         for (var i = 0; i < salesOrderLineCount; i++) {
             var itemId = newRecord.getSublistValue({
@@ -99,20 +100,23 @@ define([
                     fieldId: 'quantity',
                     line: i,
                 })
-                var amount = newRecord.getSublistValue({
-                    sublistId: 'item',
-                    fieldId: 'amount',
-                    line: i,
-                })
-                log.debug('amount before ', amount);
-                amount -= qty * Rate
-                log.debug('amount after ', amount);
-                newRecord.setSublistValue({
-                    sublistId: 'item',
-                    fieldId: 'amount',
-                    line: i,
-                    value: amount
-                })
+                if(deducted = false){
+                    var rate = newRecord.getSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'rate',
+                        line: i,
+                    })
+                    log.debug('amount before ', rate);
+                    rate -= Rate
+                    log.debug('amount after ', rate);
+                    newRecord.setSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'rate',
+                        line: i,
+                        value: rate
+                    })
+                    deducted = true
+                }
 
                 totalQuantity += qty
             } else if (itemId == 11) {

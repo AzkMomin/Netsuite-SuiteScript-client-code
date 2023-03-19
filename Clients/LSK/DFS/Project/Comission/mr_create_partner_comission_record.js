@@ -38,7 +38,7 @@ define([
   }
   const reduce = (context) => {
     var partnerID = context.key
-    log.debug('partnerID : ',partnerID)
+    log.debug('partnerID : ', partnerID)
     var records = context.values
 
     var commAmount = 0;
@@ -236,11 +236,13 @@ define([
     const customrecord_commissionsSearch = search.create({
       type: 'customrecord921',
       filters: [
-        ['custrecord_amz_dfs_com_date', 'within', 'lastmonth'],
+        // ['custrecord_amz_dfs_com_date', 'within', 'lastmonth'],
+        ['custrecord_lsk_comm_month', 'anyof', '1'],
         'AND',
         ['custrecord_amz_dfs_com_partner', 'anyof', String(partnerId)],
         'AND',
-        ['custrecord_amz_dfs_com_date', 'within', 'thisfiscalyear'],
+        // ['custrecord_amz_dfs_com_date', 'within', 'thisfiscalyear'],
+        ['custrecord_amz_dfs_com_date', 'within', '11/1/2022', '11/30/2023'],
       ],
       columns: [
         customrecord_commissionsSearchColEmployee,
@@ -281,7 +283,8 @@ define([
     const customrecord921Search = search.create({
       type: 'customrecord921',
       filters: [
-        ['custrecord_amz_dfs_com_date', 'within', 'thismonth'],
+        //['custrecord_amz_dfs_com_date', 'within', 'thismonth'],
+        ['custrecord_lsk_comm_month', 'anyof', '2'],
         'AND',
         ['custrecord_amz_dfs_com_partner', 'anyof', String(partnerId)],
       ],

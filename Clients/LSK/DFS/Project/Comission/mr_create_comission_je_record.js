@@ -20,7 +20,7 @@ define([
     // log.debug('searchResult : ', invRecResult);
     log.debug('-------------------------------------- : ');
     var invRec = record.load({
-      type: 'invoice',
+      type: invRecResult.recordType,
       id: invRecResult.id
     });
 
@@ -65,12 +65,6 @@ define([
       value: invRec.getValue('subsidiary'),
       ignoreFieldChange: true
     });
-    // commRec.setValue({
-    //   fieldId: 'custbody_amz_sales_rep',
-    //   value: invRec.getValue('salesrep'),
-    //   ignoreFieldChange: true
-    // });
-
     commRec.setValue({
       fieldId: 'location',
       value: invRec.getValue('location'),
@@ -137,13 +131,8 @@ define([
         columns: ['custentity_amz_sales_profit_1']
       });
 
-      setCommJeDebitLine(commRec, tot)
+      setCommJeDebitLine(commRec, tot,invRecResult.recordType)
 
-      // commRec.selectLine({
-      //     sublistId: 'line',
-      //     line: 1
-      // });
-      // commRec.setCurrentSublistValue({
       commRec.setSublistValue({
         sublistId: 'line',
         fieldId: 'account',
@@ -151,14 +140,21 @@ define([
         value: 751
 
       });
-
-      // commRec.setCurrentSublistValue({
-      commRec.setSublistValue({
-        sublistId: 'line',
-        fieldId: 'credit',
-        line: 1,
-        value: tot
-      });
+      if(invRecResult.recordType == 'invoice'){
+        commRec.setSublistValue({
+          sublistId: 'line',
+          fieldId: 'debit',
+          line: 1,
+          value: tot
+        });
+      }else{
+          commRec.setSublistValue({
+            sublistId: 'line',
+            fieldId: 'credit',
+            line: 1,
+            value: tot
+          });
+      }
 
       commRec.setSublistValue({
         sublistId: 'line',
@@ -167,16 +163,14 @@ define([
         value: parseFloat((salesRepFields.custentity_amz_sales_profit_1).toString().split('.'))
       });
 
-      // commRec.setCurrentSublistValue({
+      
       commRec.setSublistValue({
         sublistId: 'line',
         fieldId: 'custcol_amz_sales_rep_partner',
         line: 1,
         value: invRec.getValue('salesrep')
       });
-      // commRec.commitLine({
-      //     sublistId: 'line'
-      // });
+     
     } else if (type_comm == '2') {
       var partnerID = invRec.getValue('partner');
       var partnerFields = search.lookupFields({
@@ -185,13 +179,8 @@ define([
         columns: ['custentity_amz_sales_profit_1']
       });
 
-      setCommJeDebitLine(commRec, tot)
+      setCommJeDebitLine(commRec, tot,invRecResult.recordType)
 
-      // commRec.selectLine({
-      //     sublistId: 'line',
-      //     line: 1
-      // });
-      // commRec.setCurrentSublistValue({
       commRec.setSublistValue({
         sublistId: 'line',
         fieldId: 'account',
@@ -200,13 +189,21 @@ define([
 
       });
 
-      // commRec.setCurrentSublistValue({
-      commRec.setSublistValue({
-        sublistId: 'line',
-        fieldId: 'credit',
-        line: 1,
-        value: tot
-      });
+      if(invRecResult.recordType = 'invoice'){
+        commRec.setSublistValue({
+          sublistId: 'line',
+          fieldId: 'debit',
+          line: 1,
+          value: tot
+        });
+      }else{
+          commRec.setSublistValue({
+            sublistId: 'line',
+            fieldId: 'credit',
+            line: 1,
+            value: tot
+          });
+      }
 
 
       commRec.setSublistValue({
@@ -216,7 +213,7 @@ define([
         value: parseFloat((partnerFields.custentity_amz_sales_profit_1).toString().split('.'))
       });
 
-      // commRec.setCurrentSublistValue({
+     
       commRec.setSublistValue({
         sublistId: 'line',
         fieldId: 'custcol_lsk_partner_je_line',
@@ -224,12 +221,7 @@ define([
         value: invRec.getValue('partner')
       });
 
-      // commRec.setCurrentSublistValue({
-
-
-      // commRec.commitLine({
-      //     sublistId: 'line'
-      // });
+     
     } else {
       var split_Persons = [];
       var totalforSplit = 0
@@ -421,7 +413,7 @@ define([
     return obj;
   }
 
-  function setCommJeDebitLine(commRec, tot) {
+  function setCommJeDebitLine(commRec, tot,recordType) {
     // commRec.selectLine({
     //     sublistId: 'line', line: 0
     // });
@@ -433,14 +425,23 @@ define([
       value: 617
 
     });
+    if(recordType == 'invoice'){
 
-    // commRec.setCurrentSublistValue({
-    commRec.setSublistValue({
-      sublistId: 'line',
-      fieldId: 'debit',
-      line: 0,
-      value: tot
-    });
+      // commRec.setCurrentSublistValue({
+      commRec.setSublistValue({
+        sublistId: 'line',
+        fieldId: 'credit',
+        line: 0,
+        value: tot
+      });
+    }else{
+      commRec.setSublistValue({
+        sublistId: 'line',
+        fieldId: 'debit',
+        line: 0,
+        value: tot
+      });
+    }
     // commRec.setCurrentSublistValue({
     commRec.setSublistValue({
       sublistId: 'line',
