@@ -49,6 +49,7 @@ rec.selectNewLine("item");
 rec.selectLine("item", i);
 rec.setCurrentSelectValue("item", "item", "123");
 rec.setCurrentSelectValue("item", "quantity", 5);
+rec.setCurrentSelectValue("item", "quantity");
 rec.commitLine("item");
 
 

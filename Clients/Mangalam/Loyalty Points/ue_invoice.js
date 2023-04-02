@@ -186,6 +186,7 @@ define(['N/search', "N/record", 'N/ui/message'], function (search, record, messa
                         newRec.setValue({ fieldId: 'custbody_lp_record_reference', value: LP_RecId });
                         newRec.setValue({ fieldId: "custbody_lps_adjusted_redeemed", value: true })
                         log.debug("LP Record Balance Updated with id  : ", LP_RecId);
+                    
                     }
                 } else {
                     log.debug("Payment Method is selected as Loyalty Points")

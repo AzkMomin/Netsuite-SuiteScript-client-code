@@ -4,105 +4,123 @@
  */
 
 define(['N/search', "N/record", "N/format"], function (search, record, format) {
+    const elegiblityCriteria = (context) => {
+
+    }
     const beforeSubmit = (context) => {
         if (context.type == 'create' || context.type == 'edit') {
             try {
                 let newRec = context.newRecord;
                 let customerID = newRec.getValue({ fieldId: "entity" });
                 let tranDate = newRec.getValue({ fieldId: "trandate" });
+                var customerFields = search.lookupFields({
+                    type: 'customer',
+                    id: customerID,
+                    columns: ['custentity_is_member', 'custentity_lp_reference', 'custentity_lp_balance']
+                });
 
-                var checkForDates = true
-                if (context.type == 'edit') {
-                    let oldRec = context.oldRecord;
-                    let oldtranDate = oldRec.getValue({ fieldId: "trandate" });
-                    // log.debug('tranDate : ', tranDate)
-                    // log.debug('oldtranDate : ', oldtranDate)
-                    if (String(oldtranDate) === String(tranDate)) {
-                        log.debug(' Old And new Dates are not equal ')
-                        checkForDates = false
+                var LPFields = search.lookupFields({
+                    type: 'customrecord_loyalty_points',
+                    id: customerFields.custentity_lp_reference[0].value,
+                    columns: ['custrecord_lp_startdate', 'custrecord_lp_expirydate', "custrecord_lp_balance"]
+                });
+
+                var LP_Balance_wallet = customerFields.custentity_lp_balance;
+                let tempLpBalance = LP_Balance_wallet;
+                var total_redeemed = 0;
+                var checkForElegible = false;
+                const SoLineCount = newRec.getLineCount({ sublistId: "item" });
+                for (let i = 0; i < SoLineCount; i++) {
+                    let itemId = newRec.getSublistValue({
+                        sublistId: 'item',
+                        fieldId: "item",
+                        line: i
+                    });
+                    let rate = newRec.getSublistValue({
+                        sublistId: 'item',
+                        fieldId: "rate",
+                        line: i
+                    });
+                    let qty = newRec.getSublistValue({
+                        sublistId: 'item',
+                        fieldId: "quantity",
+                        line: i
+                    });
+                    var estLp = rate * qty
+                    log.debug('estLp : ', estLp)
+                    var invantoryItemFields = search.lookupFields({
+                        type: 'inventoryitem',
+                        id: itemId,
+                        columns: ['custitem_lps_redeemable_per_unit']
+                    });
+                    var redeemRate = invantoryItemFields.custitem_lps_redeemable_per_unit;
+
+                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_redemption_rate", line: i, value: invantoryItemFields.custitem_lps_redeemable_per_unit })
+                    newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_est_lp_point_added", line: i, value: estLp })
+                    if (redeemRate != "") {
+                        checkForElegible = true
+
+                        var lp_to_be_redeemed = qty * Number(redeemRate);
+                        // log.debug("lp_to_be_redeemed : ", lp_to_be_redeemed);
+                        var lp_Redeemed = min(tempLpBalance, lp_to_be_redeemed);
+                        // log.debug("lp_RedeemAble : ", lp_Redeemed);
+                        tempLpBalance -= lp_Redeemed;
+                        total_redeemed += lp_Redeemed
                     }
                 }
-                //If old trandate == new trandate on edit then dont check further
-                // if (checkForDates) {
-                    var customerFields = search.lookupFields({
-                        type: 'customer',
-                        id: customerID,
-                        columns: ['custentity_is_member', 'custentity_lp_reference']
-                    });
+                log.debug('total_redeemed : ', total_redeemed)
+                newRec.setValue({ fieldId: 'custbody_tot_lp_to_be_redeem', value: total_redeemed });
+                let member = getMember(customerID);
 
-                    var LPFields = search.lookupFields({
-                        type: 'customrecord_loyalty_points',
-                        id: customerFields.custentity_lp_reference[0].value,
-                        columns: ['custrecord_lp_startdate', 'custrecord_lp_expirydate', "custrecord_lp_balance"]
-                    });
+                // LP reference is not present but fall between LP dates
+                let betweenDate = IsfallInMembershipDate(tranDate, member.startDate, member.expireDate);
+                let betweenLpExpireDate = IsfallInMembershipDate(tranDate, LPFields.custrecord_lp_startdate, LPFields.custrecord_lp_expirydate);
+                log.debug('betweenDate : ', betweenDate);
+                log.debug('betweenLpExpireDate : ', betweenLpExpireDate);
 
-                    var checkForElegible = false;
-                    const SoLineCount = newRec.getLineCount({ sublistId: "item" });
-                    for (let i = 0; i < SoLineCount; i++) {
-                        let itemId = newRec.getSublistValue({
-                            sublistId: 'item',
-                            fieldId: "item",
-                            line: i
-                        });
-                        let rate = newRec.getSublistValue({
-                            sublistId: 'item',
-                            fieldId: "rate",
-                            line: i
-                        });
-                        let qty = newRec.getSublistValue({
-                            sublistId: 'item',
-                            fieldId: "quantity",
-                            line: i
-                        });
-                        var estLp = rate * qty
-                        log.debug('estLp : ', estLp)
-                        var invantoryItemFields = search.lookupFields({
-                            type: 'inventoryitem',
-                            id: itemId,
-                            columns: ['custitem_lps_redeemable_per_unit']
-                        });
-                        newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_redemption_rate", line: i, value: invantoryItemFields.custitem_lps_redeemable_per_unit })
-                        newRec.setSublistValue({ sublistId: "item", fieldId: "custcol_est_lp_point_added", line: i, value: estLp })
-                        if (invantoryItemFields.custitem_lps_redeemable_per_unit != "") {
-                            checkForElegible = true
-                        }
-                    }
-                    let member = getMember(customerID);
-                    log.debug('member : ', member)
+                // var EligibleForLp = newRec.getValue({ fieldId: "custbody_is_eligible_for_lps" });
+                // var paymentMethLp = newRec.getValue({ fieldId: "custbody_pay_meth_is_lp" });
 
-                    // LP reference is not present but fall between LP dates
-                    let betweenDate = IsfallInMembershipDate(tranDate, member.startDate, member.expireDate);
-                    let betweenLpExpireDate = IsfallInMembershipDate(tranDate, LPFields.custrecord_lp_startdate, LPFields.custrecord_lp_expirydate);
-                    log.debug('betweenDate : ', betweenDate);
-                    log.debug('betweenLpExpireDate : ', betweenLpExpireDate);
+                if (betweenLpExpireDate.IsInBetween && member.LP_Balance != 0 && checkForElegible) {
+                    log.debug('Eligible for LPs because trandate falls between lp dates date : ')
 
-                    // var EligibleForLp = newRec.getValue({ fieldId: "custbody_is_eligible_for_lps" });
-                    // var paymentMethLp = newRec.getValue({ fieldId: "custbody_pay_meth_is_lp" });
-
-                    if (betweenLpExpireDate.IsInBetween && member.LP_Balance != 0 && checkForElegible) {
-                        log.debug('Eligible for LPs because trandate falls between lp dates date : ')
-                    
-                        newRec.setValue({ fieldId: 'custbody_pay_meth_is_lp', value: true });
-                        newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: false });
-                        if (!customerFields.custentity_lp_reference) {
-                            // LP reference is not present but fall between LP dates
-                            const LP_RecId = createLoyaltyPointRec(customerID, member.startDate);
-                            const customerSaveID = record.submitFields({
-                                type: "customer",
-                                id: customerID,
-                                values: {
-                                    "custentity_lp_reference": LP_RecId
-                                }
-                            });
-                            log.debug("Successfully set reference of newly created LP record : ID : ", customerSaveID);
-                        }
-                    } else if (betweenDate.IsInBetween) { //&& betweenLpExpireDate.LP_Balance != 0
-                        log.debug('Payment Method is LP')
+                    var eligibleForLp = newRec.getValue({ fieldId: 'custbody_is_eligible_for_lps' });
+                    var paymentMethodIsLp = newRec.getValue({ fieldId: 'custbody_pay_meth_is_lp' });
+                    if (paymentMethodIsLp == false) {
+                        log.debug('Eligible sets manually : ')
                         newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true });
                         newRec.setValue({ fieldId: 'custbody_pay_meth_is_lp', value: false });
-
+                    }else if(eligibleForLp){
+                        log.debug('Eligible sets manually : ')
+                        newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true });
+                        newRec.setValue({ fieldId: 'custbody_pay_meth_is_lp', value: false });
                     }
+                     else {
+                        newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: false });
+                        newRec.setValue({ fieldId: 'custbody_pay_meth_is_lp', value: true });
+                    }
+                    if (!customerFields.custentity_lp_reference) {
+                        // LP reference is not present but fall between LP dates
+                        const LP_RecId = createLoyaltyPointRec(customerID, member.startDate);
+                        const customerSaveID = record.submitFields({
+                            type: "customer",
+                            id: customerID,
+                            values: {
+                                "custentity_lp_reference": LP_RecId
+                            }
+                        });
+                        log.debug("Successfully set reference of newly created LP record : ID : ", customerSaveID);
+                    }
+                } else if (betweenDate.IsInBetween) { //&& betweenLpExpireDate.LP_Balance != 0
+                    log.debug('Payment Method is LP')
+                    newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: true });
+                    newRec.setValue({ fieldId: 'custbody_pay_meth_is_lp', value: false });
 
+                }else{
+                    log.debug('Doesnt fall in any of the criteria')
+                    newRec.setValue({ fieldId: 'custbody_is_eligible_for_lps', value: false });
+                    newRec.setValue({ fieldId: 'custbody_pay_meth_is_lp', value: false });
+                }
 
                 // }
             }
@@ -205,8 +223,17 @@ define(['N/search', "N/record", "N/format"], function (search, record, format) {
 
     }
 
-
+    function min(LP_Balance, redeemed) {
+        var redeemable
+        if (LP_Balance >= redeemed) {
+            redeemable = redeemed
+        } else {
+            redeemable = LP_Balance
+        }
+        return redeemable;
+    }
     return {
+        beforeLoad: elegiblityCriteria,
         beforeSubmit,
     }
 });

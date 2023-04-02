@@ -10,7 +10,7 @@ define([
     const getInputData = () => {
         //saved search which lists out the invoices where delta dollars are used
         const salesorderSearch = search.load({
-            id: "customsearch_monogram_orders"
+            id: 'customsearch_monogram_orders'
         });
 
 
@@ -80,7 +80,7 @@ define([
             sublistId: 'item',
         })
 
-        var deducted = false
+
         log.debug('salesOrderLineCount  ', salesOrderLineCount);
         for (var i = 0; i < salesOrderLineCount; i++) {
             var itemId = newRecord.getSublistValue({
@@ -100,23 +100,21 @@ define([
                     fieldId: 'quantity',
                     line: i,
                 })
-                if(deducted = false){
-                    var rate = newRecord.getSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'rate',
-                        line: i,
-                    })
-                    log.debug('amount before ', rate);
-                    rate -= Rate
-                    log.debug('amount after ', rate);
-                    newRecord.setSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'rate',
-                        line: i,
-                        value: rate
-                    })
-                    deducted = true
-                }
+
+                var rate = newRecord.getSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'rate',
+                    line: i,
+                })
+                log.debug('amount before ', rate);
+                rate -= Rate
+                log.debug('amount after ', rate);
+                newRecord.setSublistValue({
+                    sublistId: 'item',
+                    fieldId: 'rate',
+                    line: i,
+                    value: rate
+                })
 
                 totalQuantity += qty
             } else if (itemId == 11) {
