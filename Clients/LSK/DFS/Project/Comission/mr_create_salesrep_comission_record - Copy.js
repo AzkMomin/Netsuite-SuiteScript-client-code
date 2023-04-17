@@ -25,7 +25,7 @@ define([
       value: {
         invId: inv_RecResult.id,
         // JE_ID: commJE_RecResult.values["GROUP(internalid)"].value,
-        creditAmt: inv_RecResult.values["custbody_amz_commission"],
+        creditAmt: inv_RecResult.values["custbodyfinal_commission"],
         // commTypeSplit: commJE_RecResult.values["GROUP(custbody_split_commissions.CUSTBODY_AMZ_INVOICE_NUM)"],
       }
     });
@@ -107,7 +107,7 @@ define([
       });
       //settin current month
       commRec.setValue({ fieldId: "custrecord_lsk_comm_month", value: month });
-
+      log.debug('month : ', month)
       var accumulatedComm = Number(person.monthComm);
       if (person.accuCommObj.isFound) {
         accumulatedComm += Number(person.accuCommObj.accuComm);
@@ -139,7 +139,7 @@ define([
         // Setting Monthly Payables
         commRec.setValue({ fieldId: "custrecord_amz_monthly_commission", value: monthlyPayables });
 
-      }else{
+      } else {
         commRec.setValue({ fieldId: "custrecord_amz_dfs_com_grantee", value: 0 });
         commRec.setValue({ fieldId: "custrecord_amz_monthly_commission", value: 0 });
       }
@@ -165,17 +165,17 @@ define([
       //   log.debug("Link updated on commission JE id  : ", commJEID)
       // })
 
-      person.invIds.forEach((result) => {
-          var otherId = record.submitFields({
-            type: 'invoice',
-            id: Number(result.invId),
-            values: {
-              'custbody_lsk_commrecord_link': commRecSavedID
-            }
-          });
-          log.debug("Link updated on Invoice id  : ", otherId)
-       
-      })
+      // person.invIds.forEach((result) => {
+      //   var otherId = record.submitFields({
+      //     type: 'invoice',
+      //     id: Number(result.invId),
+      //     values: {
+      //       'custbody_lsk_commrecord_link': commRecSavedID
+      //     }
+      //   });
+      //   log.debug("Link updated on Invoice id  : ", otherId)
+
+      // })
 
     }
     catch (e) {

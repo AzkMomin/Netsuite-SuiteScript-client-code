@@ -22,22 +22,22 @@ define(['N/error', 'N/record', 'N/runtime', 'N/search'],
 
       function map(context) {
          try {
-            var valuePairs = JSON.parse(context.value);
-            context.write({
-               key: valuePairs.internalId,
-               value: {
-                  sequence: valuePairs.sequence,
-                  internalId: valuePairs.internalId,
-                  recordType: valuePairs.recordType,
-                  lineUniqueKey: valuePairs.lineUniqueKey,
-                  lineItem: valuePairs.lineItem,
-                  netAmount: valuePairs.netAmount,
-                  commissionAmount: valuePairs.commissionAmount,
-                  partnerId: valuePairs.partnerId,
-                  payout: valuePairs.payout,
-                  adjustment: valuePairs.adjustment
-               }
-            });
+            // var valuePairs = JSON.parse(context.value);
+            // context.write({
+            //    key: valuePairs.internalId,
+            //    value: {
+            //       sequence: valuePairs.sequence,
+            //       internalId: valuePairs.internalId,
+            //       recordType: valuePairs.recordType,
+            //       lineUniqueKey: valuePairs.lineUniqueKey,
+            //       lineItem: valuePairs.lineItem,
+            //       netAmount: valuePairs.netAmount,
+            //       commissionAmount: valuePairs.commissionAmount,
+            //       partnerId: valuePairs.partnerId,
+            //       payout: valuePairs.payout,
+            //       adjustment: valuePairs.adjustment
+            //    }
+            // });
          }
          catch (e) {
             log.error('MAP Exception ' + e.message, e);
@@ -164,7 +164,7 @@ define(['N/error', 'N/record', 'N/runtime', 'N/search'],
                      'commissionAmount': commissionAmount,
                      'partnerId': partnerId,
                      'payout': payout,
-                     "adjustment": ""
+                     'adjustment': ""
                   });
                }
 
@@ -184,7 +184,7 @@ define(['N/error', 'N/record', 'N/runtime', 'N/search'],
 
             searchObj = null;
          }
-         // log.debug("arr", arr)
+         log.debug("arr", arr)
          return arr;
       }
       function getPeriodDetails(id) {
@@ -216,29 +216,28 @@ define(['N/error', 'N/record', 'N/runtime', 'N/search'],
                var _lineItem = valueArr[v].lineItem;
                var _netAmount = valueArr[v].netAmount;
                var _adjustment = valueArr[v].adjustment;
-               if (_adjustment != "") {
 
-                  for (var i = 0; i < itemCount; i++) {
-                     var altSalesPercent = rec.getSublistValue({ sublistId: 'item', fieldId: 'custcol_alt_sales_percent', line: i })
-                     var lineAmount = rec.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i })
+               for (var i = 0; i < itemCount; i++) {
+                  var altSalesPercent = rec.getSublistValue({ sublistId: 'item', fieldId: 'custcol_alt_sales_percent', line: i })
+                  var lineAmount = rec.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i })
 
-                     //resetting commission paid amount based on altSales %
-                     _commissionamount = round_number((altSalesPercent * _netAmount) / 100, 2)
+                  //resetting commission paid amount based on altSales %
+                  _commissionamount = round_number((altSalesPercent * _netAmount) / 100, 2)
 
-                     // log.debug('Resetting Commission Paid Amoun :: altSalesPercent : ' + altSalesPercent + ' : lineAmount : ' + lineAmount + ' : Commission Calculated : ', _commissionamount)
-                     var lineUniqueKey = rec.getSublistValue({ sublistId: 'item', fieldId: 'lineuniquekey', line: i });
-                     if (lineUniqueKey === _lineUniqueKey) {
-                        log.debug('Selected Item : ', lineUniqueKey)
-                        rec.selectLine('item', i);
-                        rec.setCurrentSublistValue({
-                           sublistId: 'item', fieldId: 'custcol_commission_paid',
-                           value: _commissionamount
-                        });
-                        rec.commitLine('item');
-                        var paidCommissionId = createPaidCommission(recordid, _partnerId, _commissionamount, _lineItem, lineUniqueKey, _adjustment);
-                        log.debug('PAID COMMISSION ID ' + paidCommissionId, JSON.stringify(valueArr[v]));
-                        break;
-                     }
+                  // log.debug('Resetting Commission Paid Amoun :: altSalesPercent : ' + altSalesPercent + ' : lineAmount : ' + lineAmount + ' : Commission Calculated : ', _commissionamount)
+                  var lineUniqueKey = rec.getSublistValue({ sublistId: 'item', fieldId: 'lineuniquekey', line: i });
+                  if (lineUniqueKey === _lineUniqueKey) {
+                     log.debug('Selected Item : ', lineUniqueKey)
+                     rec.selectLine('item', i);
+                     rec.setCurrentSublistValue({
+                        sublistId: 'item', fieldId: 'custcol_commission_paid',
+                        value: _commissionamount
+                     });
+                     rec.commitLine('item');
+                     var paidCommissionId = createPaidCommission(recordid, _partnerId, _commissionamount, _lineItem, lineUniqueKey, _adjustment);
+                     log.debug('PAID COMMISSION ID ' + paidCommissionId, JSON.stringify(valueArr[v]));
+                     break;
+
                   }
                }
             }
@@ -278,7 +277,7 @@ define(['N/error', 'N/record', 'N/runtime', 'N/search'],
       function createPaidCommission(internalid, partnerid, commissionpaid, itemid, lineUniqueKey, adjustment) {
          log.debug("adjustment on comm ", adjustment)
          try {
-
+            // if (adjustment == "") {
             var COMMISSION_PAID = record.create({
                type: 'customrecord_commission_paid',
             });
@@ -288,12 +287,11 @@ define(['N/error', 'N/record', 'N/runtime', 'N/search'],
             COMMISSION_PAID.setValue('custrecord_commission_paid_amount', commissionpaid);
             COMMISSION_PAID.setValue('custrecord_commission_item', itemid);
             COMMISSION_PAID.setValue('custrecord_invoice_line_id', lineUniqueKey);
-            COMMISSION_PAID.setValue('custrecord_adjusted_commission', adjustment);
             log.debug('Set Line Unique Field Value to : ', lineUniqueKey)
 
             var COMMISSION_PAID_ID = COMMISSION_PAID.save();
             return COMMISSION_PAID_ID;
-
+            //}
          }
          catch (e) {
             log.debug('createPaidCommission ' + e.message, e)
@@ -463,10 +461,44 @@ define(['N/error', 'N/record', 'N/runtime', 'N/search'],
          }
          return obj
       }
+
+      // function getLetestPaidCommrec(internalId) {
+      //    var id
+      //    const customrecord_commission_paidSearchColInternalId = search.createColumn({ name: 'internalid' });
+      //    const customrecord_commission_paidSearchColSalesReppartner = search.createColumn({ name: 'custrecord_commission_partner' });
+      //    const customrecord_commission_paidSearchColDateCreated = search.createColumn({ name: 'created', sort: search.Sort.DESC });
+      //    const customrecord_commission_paidSearch = search.create({
+      //       type: 'customrecord_commission_paid',
+      //       filters: [
+      //          ['custrecord_commission_partner', 'anyof', internalId],
+      //       ],
+      //       columns: [
+      //          customrecord_commission_paidSearchColInternalId,
+      //          customrecord_commission_paidSearchColSalesReppartner,
+      //          customrecord_commission_paidSearchColDateCreated,
+      //       ],
+      //    });
+      //    // Note: Search.run() is limited to 4,000 results
+      //    // customrecord_commission_paidSearch.run().each((result: search.Result): boolean => {
+      //    //   return true;
+      //    // });
+      //    const customrecord_commission_paidSearchPagedData = customrecord_commission_paidSearch.runPaged({ pageSize: 1000 });
+      //    for (let i = 0; i < 1; i++) {
+      //       const customrecord_commission_paidSearchPage = customrecord_commission_paidSearchPagedData.fetch({ index: i });
+      //       customrecord_commission_paidSearchPage.data.forEach((result) => {
+      //          const internalId = result.getValue(customrecord_commission_paidSearchColInternalId);
+      //          const salesReppartner = result.getValue(customrecord_commission_paidSearchColSalesReppartner);
+      //          const dateCreated = result.getValue(customrecord_commission_paidSearchColDateCreated);
+
+      //          id = internalId
+      //       });
+      //    }
+      //    return id
+      // }
       return {
          getInputData: getInputData,
          map: map,
-         reduce: reduce,
+         // reduce: reduce,
          // summarize: summarize
       };
 

@@ -9,7 +9,8 @@ define([
   // var partnerIDs = getPartners()
   const getInputData = () => {
     var transactionSearch = search.load({
-      id: 'customsearch2991'
+      // id: 3041
+      id: 2977
     })
 
 
@@ -17,20 +18,21 @@ define([
   }
 
   const map = (context) => {
-    var commJE_RecResult = JSON.parse(context.value);
-    // log.debug('searchResult : ', commJE_RecResult);
-    const partner = commJE_RecResult.values["GROUP(custcol_lsk_partner_je_line)"].value;
+    var inv_RecResult = JSON.parse(context.value);
+    // log.debug('searchResult : ', inv_RecResult);
+    //const partner = inv_RecResult.values.partner.value;
+    const partner = inv_RecResult.values["GROUP(custcol_amz_sales_rep_partner)"].value;
 
-
-    // const salesrep = commJE_RecResult.values["GROUP(custcol_amz_sales_rep_partner)"].value;
     context.write({
       key: partner,
       value: {
-        invId: commJE_RecResult.values["GROUP(internalid.CUSTBODY_AMZ_INVOICE_NUM)"].value,
-        JE_ID: commJE_RecResult.values["GROUP(internalid)"].value,
-        creditAmt: commJE_RecResult.values["AVG(formulacurrency)"],
-        commTypeSplit: commJE_RecResult.values["GROUP(custbody_split_commissions.CUSTBODY_AMZ_INVOICE_NUM)"],
-        date: commJE_RecResult.values["GROUP(trandate)"]
+        //invId: inv_RecResult.id,
+        invId: inv_RecResult.values['GROUP(internalid.CUSTBODY_AMZ_INVOICE_NUM)'].value,
+        // JE_ID: commJE_RecResult.values["GROUP(internalid)"].value,
+        JE_ID: inv_RecResult.values["GROUP(internalid)"].value,
+        // creditAmt: inv_RecResult.values["custbodyfinal_commission"],
+        creditAmt: inv_RecResult.values["AVG(formulacurrency)"],
+        // commTypeSplit: commJE_RecResult.values["GROUP(custbody_split_commissions.CUSTBODY_AMZ_INVOICE_NUM)"],
       }
     });
 
@@ -38,14 +40,14 @@ define([
   }
   const reduce = (context) => {
     var partnerID = context.key
-    log.debug('partnerID : ', partnerID)
+    // log.debug('partnerID : ', partnerID)
 
     var records = context.values
 
     var commAmount = 0;
     var linkApplyToCommJE = []
     var linkApplyToInv = []
-    // log.debug("salesrepId ", salesrepId)
+
     // log.debug("records ", records)
     records.forEach((result) => {
       var resultObj = JSON.parse(result);
@@ -53,18 +55,18 @@ define([
       linkApplyToCommJE.push(resultObj.JE_ID);
       linkApplyToInv.push({
         invId: resultObj.invId,
-        isSplitComm: resultObj.commTypeSplit
+        // isSplitComm: resultObj.commTypeSplit
       });
     })
 
     commAmount = commAmount.toFixed(2)
-    log.debug('commAmount : ', commAmount)
+    // log.debug('commAmount : ', commAmount)
     // log.debug('linkApplyToCommJE : ', linkApplyToCommJE)
 
     var partnerAccumulatedComm = getPartnerAccumulatedComm(partnerID);
-    log.debug('partnerAccumulatedComm : ', partnerAccumulatedComm)
+    // log.debug('partnerAccumulatedComm : ', partnerAccumulatedComm)
     var prevPartnerRec = getPreviousPartnerRecord(partnerID)
-    log.debug('prevPartnerRec : ', prevPartnerRec)
+    // log.debug('prevPartnerRec : ', prevPartnerRec)
 
     const person = {
       id: partnerID,
@@ -99,7 +101,7 @@ define([
 
       var partner_salesrep = "custrecord_amz_dfs_com_partner";
 
-      var date = new Date("11/30/2021");
+      var date = new Date("3/31/2023");
       var month = date.getMonth() + 1;
       //Setting partner or emp field
       commRec.setValue({ fieldId: partner_salesrep, value: person.id });
@@ -111,6 +113,7 @@ define([
           type: format.Type.DATE
         })
       });
+      log.debug('month : ', month)
       //settin current month
       commRec.setValue({ fieldId: "custrecord_lsk_comm_month", value: month });
       //Setting Monthly commission
@@ -146,6 +149,9 @@ define([
         // Setting Monthly Payables
         commRec.setValue({ fieldId: "custrecord_amz_monthly_commission", value: monthlyPayables });
 
+      } else {
+        commRec.setValue({ fieldId: "custrecord_amz_dfs_com_grantee", value: 0 });
+        commRec.setValue({ fieldId: "custrecord_amz_monthly_commission", value: 0 });
       }
 
       var commRecSavedID = commRec.save();
@@ -171,46 +177,15 @@ define([
 
 
       person.invIds.forEach((result) => {
-
-        if (result.isSplitComm == "F") {
-          var otherId = record.submitFields({
-            type: 'invoice',
-            id: result.invId,
-            values: {
-              'custbody_lsk_commrecord_link': commRecSavedID
-            }
-          });
-          log.debug("Link updated on Invoice id  : ", otherId)
-        } else {
-          var invFields = search.lookupFields({
-            type: "invoice",
-            id: result.invId,
-            columns: ['custbodydfs_salesrep1_', "custbodydfs_salesrepb_", 'custbodydfs_partnera_', 'custbodydfs_partnerb_'] //"custentity31", "custentity32", "custentity33"
-          });
-
-          if (invFields.custbodydfs_partnera_ != "" && invFields.custbodydfs_partnera_[0].value == person.id) {
-            // log.debug(" SalesRep A : ", invFields.custbodydfs_salesrep1_)
-            var otherId = record.submitFields({
-              type: 'invoice',
-              id: result.invId,
-              values: {
-                "custbody_lsk_partnerlink_1": commRecSavedID
-              }
-            });
-            log.debug("Link updated on Invoice id  : ", otherId)
+        var otherId = record.submitFields({
+          type: 'invoice',
+          id: result.invId,
+          values: {
+            'custbody_lsk_commrecord_link': commRecSavedID
           }
-          else if (invFields.custbodydfs_partnerb_ != "" && invFields.custbodydfs_partnerb_[0].value == person.id) {
-            // log.debug(" SalesRep  : ", invFields.custbodydfs_salesrepb_)
-            var otherId = record.submitFields({
-              type: 'invoice',
-              id: result.invId,
-              values: {
-                "custbody_lsk_partnerlink_2": commRecSavedID
-              }
-            });
-            log.debug("Link updated on Invoice id  : ", otherId)
-          }
-        }
+        });
+        log.debug("Link updated on Invoice id  : ", otherId)
+
       })
 
     }
@@ -228,12 +203,14 @@ define([
       type: 'customrecord921',
       filters: [
         // ['custrecord_amz_dfs_com_date', 'within', 'lastmonth'],
-        ['custrecord_lsk_comm_month', 'anyof', '1'],
+        // ['custrecord_lsk_comm_month', 'anyof', '1'],
+        ['custrecord_amz_dfs_com_date', 'within', '2/1/2022', '2/28/2022'],
         'AND',
         ['custrecord_amz_dfs_com_partner', 'anyof', String(partnerId)],
         'AND',
         // ['custrecord_amz_dfs_com_date', 'within', 'thisfiscalyear'],
-        ['custrecord_amz_dfs_com_date', 'within', '11/1/2022', '11/30/2023'],
+        // ['custrecord_amz_dfs_com_date', 'within', '11/1/2022', '11/30/2023'],
+        ['custrecord_amz_dfs_com_date', 'within', '11/1/2022', '10/31/2023'],
       ],
       columns: [
         customrecord_commissionsSearchColEmployee,
@@ -275,7 +252,8 @@ define([
       type: 'customrecord921',
       filters: [
         //['custrecord_amz_dfs_com_date', 'within', 'thismonth'],
-        ['custrecord_lsk_comm_month', 'anyof', '2'],
+        // ['custrecord_lsk_comm_month', 'anyof', '2'],
+        ['custrecord_amz_dfs_com_date', 'within', '3/1/2023', '3/31/2023'],
         'AND',
         ['custrecord_amz_dfs_com_partner', 'anyof', String(partnerId)],
       ],
@@ -310,23 +288,6 @@ define([
 
     return found;
   }
-
-
-  // function getPartners() {
-  //   var partnerIds = []
-  //   var mySearch = search.load({
-  //     id: 2743
-  //   });
-  //   mySearch.run().each(function (result) {
-  //     var internalID = result.getValue({
-  //       name: 'internalid'
-  //     });
-  //     obj.push(internalID)
-  //     return true;
-  //   });
-
-  //   return partnerIds
-  // }
 
   return {
     getInputData,

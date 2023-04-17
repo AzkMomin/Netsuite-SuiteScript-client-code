@@ -9,7 +9,8 @@ define([
 
   const getInputData = () => {
     var transactionSearch = search.load({
-      id: 2990
+      // id: 2990
+      id: 2976
     })
 
     return transactionSearch
@@ -47,18 +48,18 @@ define([
       linkApplyToCommJE.push(resultObj.JE_ID);
       linkApplyToInv.push({
         invId: resultObj.invId,
-        isSplitComm: resultObj.commTypeSplit,
+        // isSplitComm: resultObj.commTypeSplit,
       });
 
     })
 
     commAmount = commAmount.toFixed(2)
-    log.debug('commAmount : ', commAmount)
+    // log.debug('commAmount : ', commAmount)
     // log.debug('linkApplyToCommJE : ', linkApplyToCommJE)
 
     var salesrepAccumulatedComm = getSalesrepAccumulatedComm(salesrepId);
     var prevSalesRepRec = getPreviousSalesRepRecord(salesrepId)
-    log.debug('salesrepAccumulatedComm : ', salesrepAccumulatedComm)
+    // log.debug('salesrepAccumulatedComm : ', salesrepAccumulatedComm)
 
     const person = {
       id: salesrepId,
@@ -93,7 +94,7 @@ define([
 
       var partner_salesrep = "custrecord_amz_dfs_com_emp";
 
-      var todysDate = new Date("11/30/2021");
+      var todysDate = new Date("3/31/2023");
       var month = todysDate.getMonth() + 1;
 
       //Setting partner or emp field
@@ -140,6 +141,9 @@ define([
         // Setting Monthly Payables
         commRec.setValue({ fieldId: "custrecord_amz_monthly_commission", value: monthlyPayables });
 
+      } else {
+        commRec.setValue({ fieldId: "custrecord_amz_dfs_com_grantee", value: 0 });
+        commRec.setValue({ fieldId: "custrecord_amz_monthly_commission", value: 0 });
       }
 
       var commRecSavedID = commRec.save();
@@ -165,44 +169,44 @@ define([
 
       person.invIds.forEach((result) => {
 
-        if (result.isSplitComm == "F") {
-          var otherId = record.submitFields({
-            type: 'invoice',
-            id: Number(result.invId),
-            values: {
-              'custbody_lsk_commrecord_link': commRecSavedID
-            }
-          });
-          log.debug("Link updated on Invoice id  : ", otherId)
-        } else {
-          var invFields = search.lookupFields({
-            type: "invoice",
-            id: result.invId,
-            columns: ['custbodydfs_salesrep1_', "custbodydfs_salesrepb_", 'custbodydfs_partnera_', 'custbodydfs_partnerb_'] //"custentity31", "custentity32", "custentity33"
-          });
-          if (invFields.custbodydfs_salesrep1_ != "" && invFields.custbodydfs_salesrep1_[0].value == person.id) {
-            // log.debug(" SalesRep A : ", invFields.custbodydfs_salesrep1_)
-            var otherId = record.submitFields({
-              type: 'invoice',
-              id: result.invId,
-              values: {
-                "custbody_lsk_commlink_1": commRecSavedID
-              }
-            });
-            log.debug("Link updated on Invoice id  : ", otherId)
+        // if (result.isSplitComm == "F") {
+        var otherId = record.submitFields({
+          type: 'invoice',
+          id: Number(result.invId),
+          values: {
+            'custbody_lsk_commrecord_link': commRecSavedID
           }
-          else if (invFields.custbodydfs_salesrepb_ != "" && invFields.custbodydfs_salesrepb_[0].value == person.id) {
-            // log.debug(" SalesRep  : ", invFields.custbodydfs_salesrepb_)
-            var otherId = record.submitFields({
-              type: 'invoice',
-              id: result.invId,
-              values: {
-                "custbody_lsk_salesreplink_2": commRecSavedID
-              }
-            });
-            log.debug("Link updated on Invoice id  : ", otherId)
-          }
-        }
+        });
+        log.debug("Link updated on Invoice id  : ", otherId)
+        // } else {
+        //   var invFields = search.lookupFields({
+        //     type: "invoice",
+        //     id: result.invId,
+        //     columns: ['custbodydfs_salesrep1_', "custbodydfs_salesrepb_", 'custbodydfs_partnera_', 'custbodydfs_partnerb_'] //"custentity31", "custentity32", "custentity33"
+        //   });
+        //   if (invFields.custbodydfs_salesrep1_ != "" && invFields.custbodydfs_salesrep1_[0].value == person.id) {
+        //     // log.debug(" SalesRep A : ", invFields.custbodydfs_salesrep1_)
+        //     var otherId = record.submitFields({
+        //       type: 'invoice',
+        //       id: result.invId,
+        //       values: {
+        //         "custbody_lsk_commlink_1": commRecSavedID
+        //       }
+        //     });
+        //     log.debug("Link updated on Invoice id  : ", otherId)
+        //   }
+        //   else if (invFields.custbodydfs_salesrepb_ != "" && invFields.custbodydfs_salesrepb_[0].value == person.id) {
+        //     // log.debug(" SalesRep  : ", invFields.custbodydfs_salesrepb_)
+        //     var otherId = record.submitFields({
+        //       type: 'invoice',
+        //       id: result.invId,
+        //       values: {
+        //         "custbody_lsk_salesreplink_2": commRecSavedID
+        //       }
+        //     });
+        //     log.debug("Link updated on Invoice id  : ", otherId)
+        //   }
+        // }
       })
 
     }
@@ -221,12 +225,12 @@ define([
       filters: [
         // ['custrecord_amz_dfs_com_date', 'within', 'lastmonth'],
         // ['custrecord_lsk_comm_month', 'anyof', '1'],
-        ['custrecord_amz_dfs_com_date', 'within', '10/1/2021', '10/31/2021'],
+        ['custrecord_amz_dfs_com_date', 'within', '2/1/2023', '2/28/2023'],
         'AND',
         ['custrecord_amz_dfs_com_emp', 'anyof', String(salesrepId)],
         'AND',
         // ['custrecord_amz_dfs_com_date', 'within', 'thisfiscalyear'],
-        ['custrecord_amz_dfs_com_date', 'within', '11/1/2021', '10/31/2022'],
+        ['custrecord_amz_dfs_com_date', 'within', '11/1/2022', '10/31/2023'],
       ],
       columns: [
         customrecord_commissionsSearchColEmployee,
@@ -269,7 +273,7 @@ define([
       filters: [
         // ['custrecord_amz_dfs_com_date', 'within', 'thismonth'],
         // ['custrecord_lsk_comm_month', 'anyof', '2'],
-        ['custrecord_amz_dfs_com_date', 'within', '11/1/2021', '11/30/2021'],
+        ['custrecord_amz_dfs_com_date', 'within', '3/1/2023', '3/31/2023'],
         'AND',
         ['custrecord_amz_dfs_com_emp', 'anyof', String(salesrepId)],
       ],
